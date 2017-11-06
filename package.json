@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "run": "pulp run",
+    "build": "pulp build",
+    "test": "pulp test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "pulp": "^12.0.1"
+  }
+}
