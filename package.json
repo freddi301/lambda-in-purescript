@@ -3,6 +3,7 @@
     "run": "pulp run",
     "build": "pulp build",
     "test": "pulp test",
+    "repl": "pulp repl",
     "precommit": "npm test"
   },
   "dependencies": {},
