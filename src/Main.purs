@@ -1,13 +1,18 @@
 module Main where
 
-import Data.Map (Map, empty, insert, lookup)
-import Data.Maybe (fromMaybe)
 import Prelude
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
+import Data.Map (Map, insert, lookup)
+import Data.Maybe (fromMaybe)
 
 data Ast = Reference String | Application Ast Ast | Abstraction String Ast
+
+infixr 5 Abstraction as \
+infixl 4 Application as !
+r :: String -> Ast
+r = Reference
 
 instance showAst :: Show Ast where
   show (Reference name) = name
@@ -16,8 +21,10 @@ instance showAst :: Show Ast where
 
 derive instance eqAst :: Eq Ast
 
+type Scope term = Map String term
+
 class (Show term, Eq term) <= Term term where
-  evaluate :: { scope :: Map String term, term :: term } -> { scope :: Map String term, term :: term }
+  evaluate :: { scope :: Scope term, term :: term } -> { scope :: Scope term, term :: term }
 
 -- TODO: check free variables
 
@@ -44,5 +51,3 @@ instance termAst :: Term Ast where
 main :: forall e. Eff (console :: CONSOLE | e) Unit
 main = do
   log "hello"
-  -- TODO: move to test
-  log $ show $ (evaluate { scope: empty, term: Application (Abstraction "x" (Reference "x")) (Abstraction "y" (Reference "y")) }).term
