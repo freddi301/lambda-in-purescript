@@ -5,39 +5,39 @@ import Main
 import Control.Monad.Eff (Eff)
 import Data.Map (empty)
 import Data.Set as Set
-import Prelude (Unit, discard, show, (==))
+import Prelude (Unit, discard, show, unit, (=<<), (==))
 import Test.Spec (pending, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter.Console (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
 
-eval :: Ast -> { scope :: Scope Ast, term :: Ast }
+eval :: (Ast Unit) -> { scope :: Scope (Ast Unit), term :: (Ast Unit) }
 eval term = evaluate { scope: empty, term }
 
-ev :: Ast -> Ast
+ev :: (Ast Unit) -> (Ast Unit)
 ev term = (evaluate { scope: empty, term }).term
 
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   describe "show Ast" do
     it "works" do
-      let action = show (Abstraction "a" (Application (Reference "a") (Reference "a")))
+      let action = show (Abstraction "a" (Application (Reference "a" unit) (Reference "a" unit) unit) unit)
       let result = "(a => (a a))"
       action `shouldEqual` result
       shouldEqual (show ("x" \ "y" \ "x")) "(x => y => x)"
       shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(x => (x x x))"
   describe "eq Ast" do
     it "works" do
-      ((Reference "a") == (Reference "a")) `shouldEqual` true
-      ((Reference "a") == (Reference "b")) `shouldEqual` false
+      ((Reference "a" unit) == (Reference "a" unit)) `shouldEqual` true
+      ((Reference "a" unit) == (Reference "b" unit)) `shouldEqual` false
       let true_ = "x" \ "y" \ "x"
       let false_ = "x" \ "y" \ "y"
       (true_ == false_) `shouldEqual` false
   describe "checkFreeVariables" do
     it "works" do
       let check scope term expected = shouldEqual (checkFreeVariables { scope: Set.fromFoldable scope, free: Set.empty, term }) (Set.fromFoldable expected)
-      check [] (Reference "x") ["x"]
-      check ["x"] (Reference "x") []
+      check [] (Reference "x" unit) ["x"]
+      check ["x"] (Reference "x" unit) []
       check [] ("x" \ "y" \ "c") ["c"]
       check [] ("x" \ "y" \ ("c" ! "x")) ["c"]
   describe "evaluate" do
@@ -62,3 +62,17 @@ main = run [consoleReporter] do
     pending "list"
     pending "church numerals"
     pending "Y combinator"
+  describe "collect garbage" do
+    it "works" do
+      let check naked decorated = shouldEqual (garbageCollect { scope: Set.empty, term: naked }) decorated
+      let gref d name = Reference name (Set.fromFoldable d)
+      let gabs d head body = Abstraction head body (Set.fromFoldable d)
+      -- let gapp d left right = Application left right (Set.fromFoldable d)
+      let true_ = "x" \ "y" \ "x"
+      let true_garbage = gabs [] "x" (gabs ["y"] "y" (gref [] "x"))
+      check true_ true_garbage
+      let false_ = "x" \ "y" \ "y"
+      let false_garbage = gabs ["x"] "x" (gabs [] "y" (gref [] "y"))
+      check false_ false_garbage
+    pending "more examples"
+      

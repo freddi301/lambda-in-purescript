@@ -8,59 +8,85 @@ import Data.Map as Map
 import Data.Maybe as Maybe
 import Data.Set as Set
 
-data Ast = Reference String | Application Ast Ast | Abstraction String Ast
+data Ast d = Reference String d | Application (Ast d) (Ast d) d | Abstraction String (Ast d) d
+
+instance functorAst :: Functor Ast where
+  map f (Reference name d) = Reference name (f d)
+  map f (Application left right d) = Application (map f left) (map f right) (f d)
+  map f (Abstraction head body d) = Abstraction head (map f body) (f d)  
 
 -- operators for friendlier construction of the ast
 -- λx.x x
 -- "x" \ "x" ! "x"
-class ToAstAbs body where toAstAbs :: String -> body -> Ast
-instance toAstAbsString :: ToAstAbs String where toAstAbs head body = Abstraction head (Reference body) 
-instance toAstAbsAst :: ToAstAbs Ast where toAstAbs = Abstraction
-class ToAstApp left right where toAstApp :: left -> right -> Ast
-instance toAstAppStringString :: ToAstApp String String where toAstApp left right = Application (Reference left) (Reference right)
-instance toAstAppStringAst :: ToAstApp String Ast where toAstApp left right = Application (Reference left) right
-instance toAstAppAstString :: ToAstApp Ast String where toAstApp left right = Application left (Reference right)
-instance toAstAppAstAst :: ToAstApp Ast Ast where toAstApp left right = Application left right
+ref :: String -> Ast Unit
+ref name = Reference name unit
+app :: Ast Unit -> Ast Unit -> Ast Unit
+app left right = Application left right unit
+abs :: String -> Ast Unit -> Ast Unit
+abs head body = Abstraction head body unit
+class ToAstAbs body where toAstAbs :: String -> body -> Ast Unit
+instance toAstAbsString :: ToAstAbs String where toAstAbs head body = abs head (ref body)
+instance toAstAbsAst :: ToAstAbs (Ast Unit) where toAstAbs head body = abs head body
+class ToAstApp left right where toAstApp :: left -> right -> Ast Unit
+instance toAstAppStringString :: ToAstApp String String where toAstApp left right = app (ref left) (ref right)
+instance toAstAppStringAst :: ToAstApp String (Ast Unit) where toAstApp left right = app (ref left) right
+instance toAstAppAstString :: ToAstApp (Ast Unit) String where toAstApp left right = app left (ref right)
+instance toAstAppAstAst :: ToAstApp (Ast Unit) (Ast Unit) where toAstApp left right = app left right
 infixr 8 toAstAbs as \
 infixl 9 toAstApp as !
 
-instance showAst :: Show Ast where
-  show (Reference name) = name
-  show (Application (Application leftLeft leftRight) right) = "(" <> show leftLeft <> " " <> show leftRight <> " " <> show right <> ")"
-  show (Application left right) = "(" <> show left <> " " <> show right <> ")"
-  show (Abstraction head (Abstraction headRight bodyRight)) = "(" <> head <> " => " <> headRight <> " => " <> show bodyRight <> ")"
-  show (Abstraction head body) = "(" <> head <> " => " <> show body <> ")"
+instance showAst :: Show (Ast d) where
+  show (Reference name _) = name
+  show (Application (Application leftLeft leftRight _) right _) = "(" <> show leftLeft <> " " <> show leftRight <> " " <> show right <> ")"
+  show (Application left right _) = "(" <> show left <> " " <> show right <> ")"
+  show (Abstraction head (Abstraction headRight bodyRight _) _) = "(" <> head <> " => " <> headRight <> " => " <> show bodyRight <> ")"
+  show (Abstraction head body _) = "(" <> head <> " => " <> show body <> ")"
 
-derive instance eqAst :: Eq Ast
+derive instance eqAst :: Eq (Ast Unit)
 
 type Scope term = Map.Map String term
 
 class (Show term, Eq term) <= Term term where
   evaluate :: { scope :: Scope term, term :: term } -> { scope :: Scope term, term :: term }
 
-checkFreeVariables :: { free :: Set.Set String, scope :: Set.Set String, term :: Ast } -> Set.Set String
-checkFreeVariables { free, scope, term } = case term of
-  Reference name -> if Set.member name scope then free else Set.insert name free
-  Application left right -> Set.union (checkFreeVariables { free, scope, term: left }) (checkFreeVariables { free, scope, term: right })
-  Abstraction head body -> checkFreeVariables { free, scope: Set.insert head scope, term: body }
-
--- TODO: garbage collect (remove not used variables from scope)
-
-instance termAst :: Term Ast where
+instance termAst :: Term (Ast Unit) where
   evaluate { scope, term } = case term of
-    Reference name -> { scope, term: Maybe.fromMaybe (Reference "") (Map.lookup name scope) }
-    Abstraction head body -> { scope, term: Abstraction head body } -- symbolic execution here
-    Application (Abstraction leftHead leftBody) right@(Abstraction _ _) ->
+    Reference name _ -> { scope, term: Maybe.fromMaybe (Reference "" unit) (Map.lookup name scope) }
+    Abstraction head body _ -> { scope, term: Abstraction head body unit } -- symbolic execution here
+    Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->
       evaluate { scope: Map.insert leftHead right scope, term: leftBody }
-    Application left@(Abstraction _ _) right ->
+    Application left@(Abstraction _ _ _) right _ ->
       let rightSide = (evaluate { scope, term: right }).term in
-      evaluate { scope, term: Application left rightSide }   
-    Application left right@(Abstraction _ _) ->
+      evaluate { scope, term: Application left rightSide unit }   
+    Application left right@(Abstraction _ _ _) _ ->
       let leftSide = evaluate { scope, term: left } in
-      evaluate { scope: leftSide.scope, term: Application leftSide.term right }
-    Application left right ->
+      evaluate { scope: leftSide.scope, term: Application leftSide.term right unit }
+    Application left right _ ->
       let leftSide = evaluate { scope, term: left } in
-      evaluate { scope: leftSide.scope, term: Application leftSide.term right }
+      evaluate { scope: leftSide.scope, term: Application leftSide.term right unit }
+
+-- use this to check undeclared variables
+checkFreeVariables :: { free :: Set.Set String, scope :: Set.Set String, term :: Ast Unit } -> Set.Set String
+checkFreeVariables { free, scope, term } = case term of
+  Reference name _ -> if Set.member name scope then free else Set.insert name free
+  Application left right _ -> Set.union (checkFreeVariables { free, scope, term: left }) (checkFreeVariables { free, scope, term: right })
+  Abstraction head body _ -> checkFreeVariables { free, scope: Set.insert head scope, term: body }
+
+-- TODO: finish garbage collect (remove not used variables from scope)
+
+type Garbage = Set.Set String
+derive instance eqAstGarbage :: Eq (Ast (Set.Set String))
+garbageCollect :: { scope :: Set.Set String, term :: Ast Unit } -> Ast Garbage
+garbageCollect { scope, term } = case term of
+  Reference name _ -> Reference name Set.empty
+  Application left right _ -> Application (garbageCollect { scope, term: left }) (garbageCollect { scope, term: right }) Set.empty
+  Abstraction head body _ ->
+    let newScope = Set.insert head scope in
+    let garbage = Set.difference newScope (checkFreeVariables { free: Set.empty, scope: Set.empty, term: body  }) in
+    let cleanScope = Set.difference newScope garbage in
+    Abstraction head (garbageCollect { scope: cleanScope, term: body }) garbage
+
+-- TODO: instance termAst :: Term (Ast Garbage) where
 
 -- TODO: symbolic evaluate
 
