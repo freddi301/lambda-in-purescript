@@ -4,6 +4,8 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
+import Data.Foldable (class Foldable)
+import Data.Foldable as Foldable
 import Data.Map as Map
 import Data.Maybe as Maybe
 import Data.Set as Set
@@ -49,7 +51,7 @@ type Scope term = Map.Map String term
 class (Show term, Eq term) <= Term term where
   evaluate :: { scope :: Scope term, term :: term } -> { scope :: Scope term, term :: term }
 
-instance termAst :: Term (Ast Unit) where
+instance termAstUnit :: Term (Ast Unit) where
   evaluate { scope, term } = case term of
     Reference name _ -> { scope, term: Maybe.fromMaybe (Reference "" unit) (Map.lookup name scope) }
     Abstraction head body _ -> { scope, term: Abstraction head body unit } -- symbolic execution here
@@ -86,7 +88,26 @@ garbageCollect { scope, term } = case term of
     let cleanScope = Set.difference newScope garbage in
     Abstraction head (garbageCollect { scope: cleanScope, term: body }) garbage
 
--- TODO: instance termAst :: Term (Ast Garbage) where
+-- TODO: test
+removeGarbage :: Garbage -> Scope (Ast Garbage) -> Scope (Ast Garbage)
+removeGarbage garbage scope = Foldable.foldl (flip Map.delete) scope garbage
+
+-- TODO: finish all cases
+instance termAstGarbage :: Term (Ast (Set.Set String)) where
+  evaluate { scope, term } = case term of
+    Reference name _ -> { scope, term: Maybe.fromMaybe (Reference "" Set.empty) (Map.lookup name scope) }
+    Abstraction head body garbage -> { scope: removeGarbage garbage scope, term: Abstraction head body Set.empty }
+    Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->
+      evaluate { scope: Map.insert leftHead right scope, term: leftBody }
+    Application left@(Abstraction _ _ _) right _ ->
+      let rightSide = (evaluate { scope, term: right }).term in
+      evaluate { scope, term: Application left rightSide Set.empty }   
+    Application left right@(Abstraction _ _ _) _ ->
+      let leftSide = evaluate { scope, term: left } in
+      evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
+    Application left right _ ->
+      let leftSide = evaluate { scope, term: left } in
+      evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
 
 -- TODO: symbolic evaluate
 

@@ -6,7 +6,7 @@ import Control.Monad.Eff (Eff)
 import Data.Map (empty)
 import Data.Set as Set
 import Prelude (Unit, discard, show, unit, (=<<), (==))
-import Test.Spec (pending, describe, it)
+import Test.Spec (describe, it, pending, pending')
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter.Console (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
@@ -62,17 +62,28 @@ main = run [consoleReporter] do
     pending "list"
     pending "church numerals"
     pending "Y combinator"
-  describe "collect garbage" do
-    it "works" do
-      let check naked decorated = shouldEqual (garbageCollect { scope: Set.empty, term: naked }) decorated
-      let gref d name = Reference name (Set.fromFoldable d)
-      let gabs d head body = Abstraction head body (Set.fromFoldable d)
-      -- let gapp d left right = Application left right (Set.fromFoldable d)
-      let true_ = "x" \ "y" \ "x"
-      let true_garbage = gabs [] "x" (gabs ["y"] "y" (gref [] "x"))
-      check true_ true_garbage
-      let false_ = "x" \ "y" \ "y"
-      let false_garbage = gabs ["x"] "x" (gabs [] "y" (gref [] "y"))
-      check false_ false_garbage
-    pending "more examples"
-      
+  describe "garbage collection" do
+    let gref d name = Reference name (Set.fromFoldable d)
+    let gabs d head body = Abstraction head body (Set.fromFoldable d)
+    -- let gapp d left right = Application left right (Set.fromFoldable d)
+    describe "collect garbage" do
+      it "works" do
+        let check naked decorated = shouldEqual (garbageCollect { scope: Set.empty, term: naked }) decorated
+        let true_ = "x" \ "y" \ "x"
+        let true_garbage = gabs [] "x" (gabs ["y"] "y" (gref [] "x"))
+        check true_ true_garbage
+        let false_ = "x" \ "y" \ "y"
+        let false_garbage = gabs ["x"] "x" (gabs [] "y" (gref [] "y"))
+        check false_ false_garbage
+      pending "more examples"
+    -- describe "evaluate with garbage" do
+    --   it "works" do
+    --     let true_ = "x" \ "y" \ "x"
+    --     let false_ = "x" \ "y" \ "y"
+    --     let not_ = "p" \ "p" ! false_ ! true_
+    --     let false_garbage = gabs ["x"] "x" (gabs [] "y" (gref [] "y"))
+    --     let result = (evaluate { scope: empty, term: (garbageCollect { scope: Set.empty, term: (not_ ! true_) }) })
+    --     let expected = { scope: empty, term: false_garbage }
+    --     shouldEqual result.term expected.term -- TODO: maintain garbage info
+    --     shouldEqual result.scope expected.scope
+      pending "more samples"
