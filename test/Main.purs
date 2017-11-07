@@ -4,6 +4,7 @@ import Main
 
 import Control.Monad.Eff (Eff)
 import Data.Map (empty)
+import Data.Set as Set
 import Prelude (Unit, discard, show, (==))
 import Test.Spec (pending, describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -32,6 +33,13 @@ main = run [consoleReporter] do
       let true_ = "x" \ "y" \ "x"
       let false_ = "x" \ "y" \ "y"
       (true_ == false_) `shouldEqual` false
+  describe "checkFreeVariables" do
+    it "works" do
+      let check scope term expected = shouldEqual (checkFreeVariables { scope: Set.fromFoldable scope, free: Set.empty, term }) (Set.fromFoldable expected)
+      check [] (Reference "x") ["x"]
+      check ["x"] (Reference "x") []
+      check [] ("x" \ "y" \ "c") ["c"]
+      check [] ("x" \ "y" \ ("c" ! "x")) ["c"]
   describe "evaluate" do
     it "identity" do
       (eval (("x" \ "x") ! ("y" \ "y"))).term `shouldEqual` ("y" \ "y")
