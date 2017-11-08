@@ -3,19 +3,19 @@ module Test.Main where
 import Main
 
 import Control.Monad.Eff (Eff)
-import Data.Map (empty)
+import Data.Map as Map
 import Data.Set as Set
-import Prelude (Unit, discard, show, unit, (=<<), (==))
-import Test.Spec (describe, it, pending, pending')
+import Prelude (Unit, discard, show, unit, (==))
+import Test.Spec (describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter.Console (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
 
 eval :: (Ast Unit) -> { scope :: Scope (Ast Unit), term :: (Ast Unit) }
-eval term = evaluate { scope: empty, term }
+eval term = evaluate { scope: Map.empty, term }
 
 ev :: (Ast Unit) -> (Ast Unit)
-ev term = (evaluate { scope: empty, term }).term
+ev term = (evaluate { scope: Map.empty, term }).term
 
 main :: Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
@@ -24,8 +24,8 @@ main = run [consoleReporter] do
       let action = show (Abstraction "a" (Application (Reference "a" unit) (Reference "a" unit) unit) unit)
       let result = "(a => (a a))"
       action `shouldEqual` result
-      shouldEqual (show ("x" \ "y" \ "x")) "(x => y => x)"
-      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(x => (x x x))"
+      shouldEqual (show ("x" \ "y" \ "x")) "(x => (y => x))"
+      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(x => ((x x) x))"
   describe "eq Ast" do
     it "works" do
       ((Reference "a" unit) == (Reference "a" unit)) `shouldEqual` true
@@ -40,6 +40,8 @@ main = run [consoleReporter] do
       check ["x"] (Reference "x" unit) []
       check [] ("x" \ "y" \ "c") ["c"]
       check [] ("x" \ "y" \ ("c" ! "x")) ["c"]
+      let false_ = "x" \ "y" \ "y"
+      check [] false_ []
   describe "evaluate" do
     it "identity" do
       (eval (("x" \ "x") ! ("y" \ "y"))).term `shouldEqual` ("y" \ "y")
@@ -63,27 +65,16 @@ main = run [consoleReporter] do
     pending "church numerals"
     pending "Y combinator"
   describe "garbage collection" do
-    let gref d name = Reference name (Set.fromFoldable d)
-    let gabs d head body = Abstraction head body (Set.fromFoldable d)
-    -- let gapp d left right = Application left right (Set.fromFoldable d)
-    describe "collect garbage" do
-      it "works" do
-        let check naked decorated = shouldEqual (garbageCollect { scope: Set.empty, term: naked }) decorated
-        let true_ = "x" \ "y" \ "x"
-        let true_garbage = gabs [] "x" (gabs ["y"] "y" (gref [] "x"))
-        check true_ true_garbage
-        let false_ = "x" \ "y" \ "y"
-        let false_garbage = gabs ["x"] "x" (gabs [] "y" (gref [] "y"))
-        check false_ false_garbage
-      pending "more examples"
-    -- describe "evaluate with garbage" do
-    --   it "works" do
-    --     let true_ = "x" \ "y" \ "x"
-    --     let false_ = "x" \ "y" \ "y"
-    --     let not_ = "p" \ "p" ! false_ ! true_
-    --     let false_garbage = gabs ["x"] "x" (gabs [] "y" (gref [] "y"))
-    --     let result = (evaluate { scope: empty, term: (garbageCollect { scope: Set.empty, term: (not_ ! true_) }) })
-    --     let expected = { scope: empty, term: false_garbage }
-    --     shouldEqual result.term expected.term -- TODO: maintain garbage info
-    --     shouldEqual result.scope expected.scope
-      pending "more samples"
+    it "remove garbage works" do
+      let false_ = "x" \ "y" \ "y"
+      shouldEqual (removeGarbage Map.empty false_) Map.empty
+      shouldEqual (removeGarbage (Map.singleton "y" false_) false_) Map.empty
+    it "works" do
+      let true_ = "x" \ "y" \ "x"
+      let false_ = "x" \ "y" \ "y"
+      let not_ = "p" \ "p" ! false_ ! true_
+      let and_ = "a" \ "b" \ "a" ! "b" ! false_
+      let or_ = "a" \ "b" \ "a" ! true_ ! "b"
+      let result = eval (and_ ! false_ ! true_)
+      shouldEqual result.term false_
+      -- shouldEqual (removeGarbage result.scope result.term) Map.empty

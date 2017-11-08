@@ -4,8 +4,6 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Data.Foldable (class Foldable)
-import Data.Foldable as Foldable
 import Data.Map as Map
 import Data.Maybe as Maybe
 import Data.Set as Set
@@ -37,12 +35,13 @@ instance toAstAppAstAst :: ToAstApp (Ast Unit) (Ast Unit) where toAstApp left ri
 infixr 8 toAstAbs as \
 infixl 9 toAstApp as !
 
-instance showAst :: Show (Ast d) where
-  show (Reference name _) = name
-  show (Application (Application leftLeft leftRight _) right _) = "(" <> show leftLeft <> " " <> show leftRight <> " " <> show right <> ")"
-  show (Application left right _) = "(" <> show left <> " " <> show right <> ")"
-  show (Abstraction head (Abstraction headRight bodyRight _) _) = "(" <> head <> " => " <> headRight <> " => " <> show bodyRight <> ")"
-  show (Abstraction head body _) = "(" <> head <> " => " <> show body <> ")"
+class ShowD d where showd :: d -> String -> String
+instance showdUnit :: ShowD Unit where showd _ string  = string
+
+instance showAst :: (ShowD d) => Show (Ast d) where
+  show (Reference name d) = showd d name
+  show (Application left right d) = showd d $ "(" <> show left <> " " <> show right <> ")"
+  show (Abstraction head body d) = showd d $ "(" <> head <> " => " <> show body <> ")"
 
 derive instance eqAst :: Eq (Ast Unit)
 
@@ -53,7 +52,7 @@ class (Show term, Eq term) <= Term term where
 
 instance termAstUnit :: Term (Ast Unit) where
   evaluate { scope, term } = case term of
-    Reference name _ -> { scope, term: Maybe.fromMaybe (Reference "" unit) (Map.lookup name scope) }
+    Reference name _ -> evaluate { scope, term: Maybe.fromMaybe (Reference "" unit) (Map.lookup name scope) }
     Abstraction head body _ -> { scope, term: Abstraction head body unit } -- symbolic execution here
     Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->
       evaluate { scope: Map.insert leftHead right scope, term: leftBody }
@@ -68,46 +67,17 @@ instance termAstUnit :: Term (Ast Unit) where
       evaluate { scope: leftSide.scope, term: Application leftSide.term right unit }
 
 -- use this to check undeclared variables
-checkFreeVariables :: { free :: Set.Set String, scope :: Set.Set String, term :: Ast Unit } -> Set.Set String
+checkFreeVariables :: forall d . { free :: Set.Set String, scope :: Set.Set String, term :: Ast d } -> Set.Set String
 checkFreeVariables { free, scope, term } = case term of
   Reference name _ -> if Set.member name scope then free else Set.insert name free
   Application left right _ -> Set.union (checkFreeVariables { free, scope, term: left }) (checkFreeVariables { free, scope, term: right })
   Abstraction head body _ -> checkFreeVariables { free, scope: Set.insert head scope, term: body }
 
--- TODO: finish garbage collect (remove not used variables from scope)
-
-type Garbage = Set.Set String
-derive instance eqAstGarbage :: Eq (Ast (Set.Set String))
-garbageCollect :: { scope :: Set.Set String, term :: Ast Unit } -> Ast Garbage
-garbageCollect { scope, term } = case term of
-  Reference name _ -> Reference name Set.empty
-  Application left right _ -> Application (garbageCollect { scope, term: left }) (garbageCollect { scope, term: right }) Set.empty
-  Abstraction head body _ ->
-    let newScope = Set.insert head scope in
-    let garbage = Set.difference newScope (checkFreeVariables { free: Set.empty, scope: Set.empty, term: body  }) in
-    let cleanScope = Set.difference newScope garbage in
-    Abstraction head (garbageCollect { scope: cleanScope, term: body }) garbage
-
--- TODO: test
-removeGarbage :: Garbage -> Scope (Ast Garbage) -> Scope (Ast Garbage)
-removeGarbage garbage scope = Foldable.foldl (flip Map.delete) scope garbage
-
--- TODO: finish all cases
-instance termAstGarbage :: Term (Ast (Set.Set String)) where
-  evaluate { scope, term } = case term of
-    Reference name _ -> { scope, term: Maybe.fromMaybe (Reference "" Set.empty) (Map.lookup name scope) }
-    Abstraction head body garbage -> { scope: removeGarbage garbage scope, term: Abstraction head body Set.empty }
-    Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->
-      evaluate { scope: Map.insert leftHead right scope, term: leftBody }
-    Application left@(Abstraction _ _ _) right _ ->
-      let rightSide = (evaluate { scope, term: right }).term in
-      evaluate { scope, term: Application left rightSide Set.empty }   
-    Application left right@(Abstraction _ _ _) _ ->
-      let leftSide = evaluate { scope, term: left } in
-      evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
-    Application left right _ ->
-      let leftSide = evaluate { scope, term: left } in
-      evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
+removeGarbage :: forall d . Scope (Ast d) -> Ast d -> Scope (Ast d)
+removeGarbage scope term =
+  let used = checkFreeVariables { free: Set.empty, scope: Set.empty, term: term } in
+  let isUsed key = Set.member key used in
+  Map.filterKeys (isUsed) scope
 
 -- TODO: symbolic evaluate
 
