@@ -4,11 +4,11 @@ import Prelude
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
+import Data.Array as Array
+import Data.Foldable as Foldable
 import Data.Map as Map
 import Data.Maybe as Maybe
 import Data.Set as Set
-import Data.Foldable as Foldable
-import Data.Array as Array
 
 data Ast d = Reference String d | Application (Ast d) (Ast d) d | Abstraction String (Ast d) d
 
@@ -117,6 +117,19 @@ instance evaluableAstCapturedReferences :: Evaluable (Ast (Set.Set String)) wher
     Application left right _ ->
       let leftSide = evaluate { scope, term: left } in
       evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
+
+reify :: forall k d . String -> Ast d -> Ast d -> Ast d
+reify ref value term = case term of
+  Reference name d -> if ref == name then value else term
+  Abstraction head body d -> if ref == head then term else Abstraction head (reify ref value body) d
+  Application left right d -> Application (reify ref value left) (reify ref value right) d
+
+reifyEvaluate :: forall d . Ast d -> Ast d
+reifyEvaluate term = case term of
+  Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> reifyEvaluate $ reify head right body
+  Application left right d -> reifyEvaluate $ Application (reifyEvaluate left) (reifyEvaluate right) d
+  _ -> term
+
 
 -- TODO: symbolic evaluate
 
