@@ -5,7 +5,7 @@ import Main
 import Control.Monad.Eff (Eff)
 import Data.Map as Map
 import Data.Set as Set
-import Prelude (Unit, discard, show, unit, (==), ($))
+import Prelude (Unit, discard, show, unit, (==))
 import Test.Spec (describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter.Console (consoleReporter)
@@ -159,3 +159,23 @@ main = run [consoleReporter] do
         let idenityInIdentity = "y" \ identity ! "y"
         it "works for idenityIdentity" do
           re (idenityInIdentity) `shouldEqual` ("y" \ "y")
+          re ("y" \ ("x" \ "x") ! "y") `shouldEqual` ("y" \ "y")
+          re ("x" \ ("x" \ "x") ! "x") `shouldEqual` ("x" \ "x")
+        it "works for x => y => (x => x) x" do
+          re ("x" \ "y" \ (("x" \ "x") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
+        it "works for x => y => (y => y) x" do
+          re ("x" \ "y" \ (("y" \ "y") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
+        it "works for x => y => (z => z) x" do
+          re ("x" \ "y" \ (("z" \ "z") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
+        it "works for x => y => (x => x) y" do
+          re ("x" \ "y" \ (("x" \ "x") ! "y")) `shouldEqual` ("x" \ "y" \ "y")
+        it "works for x => y => (y => x) y" do
+          re ("x" \ "y" \ (("y" \ "y") ! "y")) `shouldEqual` ("x" \ "y" \ "y")
+        it "works for x => y => (z => z) y" do
+          re ("x" \ "y" \ (("z" \ "z") ! "y")) `shouldEqual` ("x" \ "y" \ "y")
+        it "works for x => y => x ((z => z) y)" do
+          re ("x" \ "y" \ ("x" ! (("z" \ "z") ! "y"))) `shouldEqual` ("x" \ "y" \ ("x" ! "y"))
+        it "works for x => y => x (z => z) y" do
+          re ("x" \ "y" \ (("x" ! ("z" \ "z")) ! "y")) `shouldEqual` ("x" \ "y" \ (("x" ! ("z" \ "z")) ! "y"))
+        it "works for x => y => x ((z => w => z) y)" do
+          re ("x" \ "y" \ ("x" ! (("z" \ "w" \ "z") ! "y"))) `shouldEqual` ("x" \ "y" \ ("x" ! ("w" \ "y")))

@@ -27,7 +27,10 @@ reifyEvaluate term = case term of
 reifyEvaluateSymbolic :: forall d . Int -> Ast d -> Ast d
 reifyEvaluateSymbolic nextSymbol term = let rec = reifyEvaluateSymbolic in case term of
   Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> rec nextSymbol $ reify head right body
-  Application (Abstraction head body _) right@(Reference _ _) _ -> rec nextSymbol $ reify head right body
+  Application (Abstraction head body _) right _ -> rec nextSymbol $ reify head right body
+  Application (Reference _ _) (Reference _ _) _ -> term
+  Application left right@(Reference _ _) d -> Application (rec nextSymbol left) right d
+  Application left@(Reference _ _) right d -> Application left (rec nextSymbol right) d
   Application left right d -> rec nextSymbol $ Application (rec nextSymbol left) (rec nextSymbol right) d
   Abstraction head body d ->
     let symbolicHead = head <> "#" <> show nextSymbol in
@@ -35,7 +38,7 @@ reifyEvaluateSymbolic nextSymbol term = let rec = reifyEvaluateSymbolic in case 
     let computedSymbolicBody = rec (nextSymbol + 1) symbolicBody in
     let concreteBody = reify symbolicHead (Reference head d) computedSymbolicBody in
     Abstraction head concreteBody d
-  _ -> term
+  Reference _ _ -> term
 
 -- Lifting Section
 
