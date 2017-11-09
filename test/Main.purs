@@ -5,7 +5,7 @@ import Main
 import Control.Monad.Eff (Eff)
 import Data.Map as Map
 import Data.Set as Set
-import Prelude (Unit, discard, show, unit, (==))
+import Prelude (Unit, discard, show, unit, (==), ($))
 import Test.Spec (describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter.Console (consoleReporter)
@@ -33,9 +33,9 @@ main = run [consoleReporter] do
       let true_ = "x" \ "y" \ "x"
       let false_ = "x" \ "y" \ "y"
       (true_ == false_) `shouldEqual` false
-  describe "checkFreeVariables" do
+  describe "collectFreeReferences" do
     it "works" do
-      let check scope term expected = shouldEqual (checkFreeVariables { scope: Set.fromFoldable scope, free: Set.empty, term }) (Set.fromFoldable expected)
+      let check scope term expected = shouldEqual (collectFreeReferences { scope: Set.fromFoldable scope, free: Set.empty, term }) (Set.fromFoldable expected)
       check [] (Reference "x" unit) ["x"]
       check ["x"] (Reference "x" unit) []
       check [] ("x" \ "y" \ "c") ["c"]
@@ -77,4 +77,21 @@ main = run [consoleReporter] do
       let or_ = "a" \ "b" \ "a" ! true_ ! "b"
       let result = eval (and_ ! false_ ! true_)
       shouldEqual result.term false_
-      -- shouldEqual (removeGarbage result.scope result.term) Map.empty
+      shouldEqual (removeGarbage result.scope result.term) Map.empty
+  describe "addCapturedReferencesDecorator" do
+    it "works" do
+      shouldEqual (addCapturedReferencesDecorator (Reference "a" unit)) (Reference "a" (Set.singleton "a"))
+      shouldEqual (addCapturedReferencesDecorator ("x" \ "x")) (Abstraction "x" (Reference "x" (Set.singleton "x")) Set.empty)
+      shouldEqual (addCapturedReferencesDecorator ("x" \ "y" \ "y")) (Abstraction "x" (Abstraction "y" (Reference "y" (Set.singleton "y")) Set.empty) Set.empty)
+  describe "evaluate captured references ast" do
+    let acrd = addCapturedReferencesDecorator
+    let true_ = "x" \ "y" \ "x"
+    let false_ = "x" \ "y" \ "y"
+    let not_ = "p" \ "p" ! false_ ! true_
+    let and_ = "a" \ "b" \ "a" ! "b" ! false_
+    let or_ = "a" \ "b" \ "a" ! true_ ! "b"
+    let falseAndTrue = and_ ! false_ ! true_
+    let result = evaluate { scope: Map.empty, term: acrd falseAndTrue }
+    it "works" do      
+      shouldEqual result.term (acrd false_)
+      -- shouldEqual result.scope Map.empty

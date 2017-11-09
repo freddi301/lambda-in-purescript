@@ -7,13 +7,20 @@ import Control.Monad.Eff.Console (CONSOLE, log)
 import Data.Map as Map
 import Data.Maybe as Maybe
 import Data.Set as Set
+import Data.Foldable as Foldable
+import Data.Array as Array
 
 data Ast d = Reference String d | Application (Ast d) (Ast d) d | Abstraction String (Ast d) d
 
 instance functorAst :: Functor Ast where
   map f (Reference name d) = Reference name (f d)
   map f (Application left right d) = Application (map f left) (map f right) (f d)
-  map f (Abstraction head body d) = Abstraction head (map f body) (f d)  
+  map f (Abstraction head body d) = Abstraction head (map f body) (f d)
+
+getD :: forall d. Ast d -> d
+getD (Reference _ d) = d
+getD (Application _ _ d) = d
+getD (Abstraction _ _ d) = d
 
 -- operators for friendlier construction of the ast
 -- λx.x x
@@ -47,12 +54,12 @@ derive instance eqAst :: Eq (Ast Unit)
 
 type Scope term = Map.Map String term
 
-class (Show term, Eq term) <= Term term where
+class Evaluable term where
   evaluate :: { scope :: Scope term, term :: term } -> { scope :: Scope term, term :: term }
 
-instance termAstUnit :: Term (Ast Unit) where
+instance evaluableAstUnit :: Evaluable (Ast Unit) where
   evaluate { scope, term } = case term of
-    Reference name _ -> evaluate { scope, term: Maybe.fromMaybe (Reference "" unit) (Map.lookup name scope) }
+    Reference name _ -> { scope, term: Maybe.fromMaybe (Reference "" unit) (Map.lookup name scope) }
     Abstraction head body _ -> { scope, term: Abstraction head body unit } -- symbolic execution here
     Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->
       evaluate { scope: Map.insert leftHead right scope, term: leftBody }
@@ -66,18 +73,50 @@ instance termAstUnit :: Term (Ast Unit) where
       let leftSide = evaluate { scope, term: left } in
       evaluate { scope: leftSide.scope, term: Application leftSide.term right unit }
 
+type CapturedReferences = Set.Set String
+instance showdSetString :: ShowD (Set.Set String) where showd set string = "[" <> show (Foldable.foldr (Array.cons) [] set) <> string <> "]"
+derive instance eqAstSetString :: Eq (Ast (Set.Set String))
 -- use this to check undeclared variables
-checkFreeVariables :: forall d . { free :: Set.Set String, scope :: Set.Set String, term :: Ast d } -> Set.Set String
-checkFreeVariables { free, scope, term } = case term of
+collectFreeReferences :: forall d . { free :: CapturedReferences, scope :: Set.Set String, term :: Ast d } -> CapturedReferences
+collectFreeReferences { free, scope, term } = case term of
   Reference name _ -> if Set.member name scope then free else Set.insert name free
-  Application left right _ -> Set.union (checkFreeVariables { free, scope, term: left }) (checkFreeVariables { free, scope, term: right })
-  Abstraction head body _ -> checkFreeVariables { free, scope: Set.insert head scope, term: body }
+  Application left right _ -> Set.union (collectFreeReferences { free, scope, term: left }) (collectFreeReferences { free, scope, term: right })
+  Abstraction head body _ -> collectFreeReferences { free, scope: Set.insert head scope, term: body }
 
 removeGarbage :: forall d . Scope (Ast d) -> Ast d -> Scope (Ast d)
 removeGarbage scope term =
-  let used = checkFreeVariables { free: Set.empty, scope: Set.empty, term: term } in
+  let used = collectFreeReferences { free: Set.empty, scope: Set.empty, term: term } in
   let isUsed key = Set.member key used in
   Map.filterKeys (isUsed) scope
+
+addCapturedReferencesDecorator :: Ast Unit -> Ast CapturedReferences
+addCapturedReferencesDecorator ast =
+  let getFreeReferences term = collectFreeReferences { free: Set.empty, scope: Set.empty, term: term } in
+  let rec = addCapturedReferencesDecorator in
+  case ast of
+    Reference name _ -> Reference name (getFreeReferences ast)
+    Abstraction head body _ -> Abstraction head (rec body) (getFreeReferences ast)
+    Application left right _ -> Application (rec left) (rec right) (getFreeReferences ast)
+
+carryScope :: forall d . CapturedReferences -> Scope (Ast d) -> Scope (Ast d)
+carryScope references scope = Map.filterKeys ((flip Set.member) references) scope
+
+instance evaluableAstCapturedReferences :: Evaluable (Ast (Set.Set String)) where
+  evaluate { scope, term } = case term of
+    Reference name _ -> { scope, term: Maybe.fromMaybe (Reference "" Set.empty) (Map.lookup name scope) }
+    Abstraction _ _ refs -> { scope: carryScope refs scope, term } -- TODO: symbolic execution here
+    Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->      
+      evaluate { scope: Map.insert leftHead right scope, term: leftBody }
+    Application left@(Abstraction _ _ _) right _ ->
+        -- TODO: do not interpret right side if not used in left (not in leftRefs)
+      let rightSide = (evaluate { scope, term: right }).term in
+      evaluate { scope, term: Application left rightSide Set.empty }   
+    Application left right@(Abstraction _ _ _) _ ->
+      let leftSide = evaluate { scope, term: left } in
+      evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
+    Application left right _ ->
+      let leftSide = evaluate { scope, term: left } in
+      evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
 
 -- TODO: symbolic evaluate
 
