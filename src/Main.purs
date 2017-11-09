@@ -12,15 +12,32 @@ import Data.Set as Set
 
 data Ast d = Reference String d | Application (Ast d) (Ast d) d | Abstraction String (Ast d) d
 
-instance functorAst :: Functor Ast where
-  map f (Reference name d) = Reference name (f d)
-  map f (Application left right d) = Application (map f left) (map f right) (f d)
-  map f (Abstraction head body d) = Abstraction head (map f body) (f d)
+reify :: forall k d . String -> Ast d -> Ast d -> Ast d
+reify ref value term = case term of
+  Reference name d -> if ref == name then value else term
+  Abstraction head body d -> if ref == head then term else Abstraction head (reify ref value body) d
+  Application left right d -> Application (reify ref value left) (reify ref value right) d
 
-getD :: forall d. Ast d -> d
-getD (Reference _ d) = d
-getD (Application _ _ d) = d
-getD (Abstraction _ _ d) = d
+reifyEvaluate :: forall d . Ast d -> Ast d
+reifyEvaluate term = case term of
+  Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> reifyEvaluate $ reify head right body
+  Application left right d -> reifyEvaluate $ Application (reifyEvaluate left) (reifyEvaluate right) d
+  _ -> term
+
+reifyEvaluateSymbolic :: forall d . Int -> Ast d -> Ast d
+reifyEvaluateSymbolic nextSymbol term = let rec = reifyEvaluateSymbolic in case term of
+  Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> rec nextSymbol $ reify head right body
+  Application (Abstraction head body _) right@(Reference _ _) _ -> rec nextSymbol $ reify head right body
+  Application left right d -> rec nextSymbol $ Application (rec nextSymbol left) (rec nextSymbol right) d
+  Abstraction head body d ->
+    let symbolicHead = head <> "#" <> show nextSymbol in
+    let symbolicBody = reify head (Reference symbolicHead d) body in
+    let computedSymbolicBody = rec (nextSymbol + 1) symbolicBody in
+    let concreteBody = reify symbolicHead (Reference head d) computedSymbolicBody in
+    Abstraction head concreteBody d
+  _ -> term
+
+-- Lifting Section
 
 -- operators for friendlier construction of the ast
 -- λx.x x
@@ -42,15 +59,27 @@ instance toAstAppAstAst :: ToAstApp (Ast Unit) (Ast Unit) where toAstApp left ri
 infixr 8 toAstAbs as \
 infixl 9 toAstApp as !
 
-class ShowD d where showd :: d -> String -> String
-instance showdUnit :: ShowD Unit where showd _ string  = string
-
 instance showAst :: (ShowD d) => Show (Ast d) where
   show (Reference name d) = showd d name
   show (Application left right d) = showd d $ "(" <> show left <> " " <> show right <> ")"
   show (Abstraction head body d) = showd d $ "(" <> head <> " => " <> show body <> ")"
 
+class ShowD d where showd :: d -> String -> String
+
+instance showdUnit :: ShowD Unit where showd _ string  = string
 derive instance eqAst :: Eq (Ast Unit)
+
+-- Other Stuff Section
+
+instance functorAst :: Functor Ast where
+  map f (Reference name d) = Reference name (f d)
+  map f (Application left right d) = Application (map f left) (map f right) (f d)
+  map f (Abstraction head body d) = Abstraction head (map f body) (f d)
+
+getD :: forall d. Ast d -> d
+getD (Reference _ d) = d
+getD (Application _ _ d) = d
+getD (Abstraction _ _ d) = d
 
 type Scope term = Map.Map String term
 
@@ -117,19 +146,6 @@ instance evaluableAstCapturedReferences :: Evaluable (Ast (Set.Set String)) wher
     Application left right _ ->
       let leftSide = evaluate { scope, term: left } in
       evaluate { scope: leftSide.scope, term: Application leftSide.term right Set.empty }
-
-reify :: forall k d . String -> Ast d -> Ast d -> Ast d
-reify ref value term = case term of
-  Reference name d -> if ref == name then value else term
-  Abstraction head body d -> if ref == head then term else Abstraction head (reify ref value body) d
-  Application left right d -> Application (reify ref value left) (reify ref value right) d
-
-reifyEvaluate :: forall d . Ast d -> Ast d
-reifyEvaluate term = case term of
-  Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> reifyEvaluate $ reify head right body
-  Application left right d -> reifyEvaluate $ Application (reifyEvaluate left) (reifyEvaluate right) d
-  _ -> term
-
 
 -- TODO: symbolic evaluate
 
