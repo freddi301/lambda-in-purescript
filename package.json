@@ -4,6 +4,7 @@
     "build": "pulp build",
     "test": "pulp test",
     "repl": "pulp repl",
+    "docs": "pulp docs",
     "precommit": "npm test"
   },
   "dependencies": {},
