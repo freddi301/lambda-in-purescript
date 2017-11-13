@@ -1,7 +1,8 @@
 module Test.Lambda.Control.Other where
 
 import Prelude (Unit, discard)
-import Test.Spec (describe, it, pending)
+import Test.Spec (Spec, describe, it, pending)
+import Test.Spec.Runner (RunnerEffects)
 import Test.Spec.Assertions (shouldEqual)
 
 import Data.Map as Map
@@ -15,6 +16,7 @@ eval term = evaluate { scope: Map.empty, term }
 ev :: (Ast String Unit) -> (Ast String Unit)
 ev term = (evaluate { scope: Map.empty, term }).term
 
+test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "evaluate" do
   it "identity" do
     (eval (("x" \ "x") ! ("y" \ "y"))).term `shouldEqual` ("y" \ "y")

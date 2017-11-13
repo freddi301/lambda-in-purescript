@@ -17,7 +17,7 @@ instance functorAst :: Functor (Ast reference) where
   map f (Abstraction head body d) = Abstraction head (map f body) (f d)
 
 -- | `Functor.map` implementation for reference part
-mapReference :: forall reference toReference decoration .
+mapReference :: ∀ reference toReference decoration .
   (reference -> toReference) -> Ast reference decoration -> Ast toReference decoration
 mapReference f (Reference name decoration) = Reference (f name) decoration
 mapReference f (Application left right decoration) = Application (mapReference f left) (mapReference f right) decoration

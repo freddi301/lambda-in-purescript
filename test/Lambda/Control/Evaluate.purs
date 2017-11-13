@@ -1,7 +1,8 @@
 module Test.Lambda.Control.Evaluate where
 
-import Prelude (discard, unit)
-import Test.Spec (describe, it, pending)
+import Prelude (Unit, unit, discard, ($))
+import Test.Spec (Spec, describe, it, pending)
+import Test.Spec.Runner (RunnerEffects)
 import Test.Spec.Assertions (shouldEqual)
 
 import Data.Set as Set
@@ -9,6 +10,7 @@ import Data.Set as Set
 import Lambda.Data.Ast (Ast(..), (!), (\))
 import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluate, reifyEvaluateSymbolic)
 
+test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Evaluate" do
   describe "collectFreeReferences" do
     it "works" do

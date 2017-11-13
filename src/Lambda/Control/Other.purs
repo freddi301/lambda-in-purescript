@@ -9,7 +9,7 @@ import Lambda.Data.Ast (Ast(..))
 -- | `evaluate` evaluates naively a lambda term
 -- | eager with scope
 type Evaluated reference decoration = { scope :: Map.Map reference (Ast reference decoration), term :: Ast reference decoration }
-evaluate :: forall reference decoration . Ord reference => Evaluated reference decoration -> Evaluated reference decoration
+evaluate :: ∀ reference decoration . Ord reference => Evaluated reference decoration -> Evaluated reference decoration
 evaluate { scope, term } = case term of
   Reference name _ -> { scope, term: Maybe.fromMaybe term (Map.lookup name scope) }
   Abstraction head body decoration -> { scope, term: Abstraction head body decoration }

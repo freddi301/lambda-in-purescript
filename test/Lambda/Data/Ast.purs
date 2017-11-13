@@ -1,11 +1,13 @@
 module Test.Lambda.Data.Ast where
 
-import Prelude (discard, show, unit, (==))
-import Test.Spec (describe, it)
+import Prelude (Unit, discard, show, (==), unit)
+import Test.Spec (Spec, describe, it)
+import Test.Spec.Runner (RunnerEffects)
 import Test.Spec.Assertions (shouldEqual)
 
 import Lambda.Data.Ast
 
+test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Ast" do
   describe "show" do
     it "works" do
