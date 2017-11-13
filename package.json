@@ -1,13 +1,16 @@
 {
   "scripts": {
-    "run": "pulp run",
-    "build": "pulp build",
-    "test": "pulp test",
-    "repl": "pulp repl",
+    "run": "npm run copy:syntax && pulp run",
+    "build": "pulp build && npm run copy:syntax",
+    "test": "npm run copy:syntax && pulp test",
+    "repl": "npm run copy:syntax && pulp repl",
     "docs": "pulp docs",
-    "precommit": "npm test"
+    "precommit": "npm test",
+    "copy:syntax": "cp -u src/Lambda/Parser/syntax.ne output/Lambda.Parser.Parser/syntax.ne"
   },
-  "dependencies": {},
+  "dependencies": {
+    "nearley-make": "^1.0.1"
+  },
   "devDependencies": {
     "husky": "^0.14.3",
     "pulp": "^12.0.1"

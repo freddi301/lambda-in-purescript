@@ -75,4 +75,10 @@ collectFreeReferences { free, scope, term } = case term of
 -- | TODO: implement α-conversion with `de bruijn`` indices for α-equivalence
 -- | toBrujin :: forall reference decoration . Ast reference decoration -> Ast Unit decoration
 
--- | TODO: η-conversion (eta-conversion) 
+-- | TODO: implement η-conversion (eta-conversion)
+
+-- | TODO: η-conversion + α-conversion + α-equivalence can be used to validate laws (example comonad laws)
+
+-- | TODO: parallel execution
+
+-- | TODO: distributed execution
