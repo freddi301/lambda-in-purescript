@@ -56,3 +56,7 @@ abs :: String -> Ast String Unit -> Ast String Unit
 abs head body = Abstraction head body unit
 -- derive instance showAstStringUnit :: Show (Ast String Unit)
 derive instance eqAstStringUnit :: Eq (Ast String Unit)
+
+data Named = Named String (Ast String Unit)
+derive instance eqNamed :: Eq Named
+instance showNamed :: Show Named where show (Named name ast) = name <> " = " <> show ast

@@ -38,12 +38,6 @@ reifyEvaluateSymbolic nextSymbol term = let rec = reifyEvaluateSymbolic in case 
   Application left@(Reference _ _) right decoration -> Application left (rec nextSymbol right) decoration
   Application left right decoration -> rec nextSymbol $ Application (rec nextSymbol left) (rec nextSymbol right) decoration
   Abstraction head body decoration ->
-    -- let headReference = Reference head decoration in
-    -- let symbolicHead = mapReference (Symbolic nextSymbol) headReference in
-    -- let symbolicBody = reify (Concrete head) symbolicHead (mapReference Concrete body) in
-    -- let computedSymbolicBody = rec (nextSymbol + 1) symbolicBody in
-    -- let concreteBody = reify symbolicHead (Reference head decoration) computedSymbolicBody in
-    -- Abstraction head concreteBody decoration
     let symbolicHead = Symbolic head nextSymbol in
     let symbolicBody = reify (Concrete head) (Reference symbolicHead decoration) (mapReference Concrete body) in
     let computedSymbolicBody = rec (nextSymbol + 1) symbolicBody in

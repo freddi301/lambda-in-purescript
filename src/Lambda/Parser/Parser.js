@@ -13,7 +13,8 @@ function parse(text) {
     require: require,
     ref: Ast.ref,
     app: Ast.app,
-    abs: Ast.abs
+    abs: Ast.abs,
+    named: Ast.Named.create
   });
   parser.feed(text);
   if (parser.results.length === 0) throw new Error("unecpected end of input");

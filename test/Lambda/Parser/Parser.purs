@@ -1,7 +1,7 @@
 module Test.Lambda.Parser.Parser where
 
-import Lambda.Data.Ast (ref, (\), (!))
-import Lambda.Parser.Parser (Block(..), IndentLevel(..), parse, parseBlocks, parseIndent)
+import Lambda.Data.Ast (ref, (\), (!), Named(..))
+import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parse, parseBlocks, parseIndent)
 import Prelude (Unit, discard, ($))
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -12,12 +12,11 @@ test = describe "Parse" do
   describe "parse" do
     let check string ast = shouldEqual (parse string) ast
     it "works" do
-      check "hello" $ ref "hello"
-      check "a b" ("a" ! "b")
-      check "a b c d" $ "a" ! "b" ! "c" ! "d"
-      check "a, b, c, d" $ "a" ! ("b" ! ("c" ! "d"))
-      check "ab cd = (ef gh)" ("ab" \ "cd" \ ("ef" ! "gh"))
-      check "ab cd = (ef gh (x = (x)))" ("ab" \ "cd" \ ("ef" ! "gh" ! ("x" \ "x")))
+      check "hello = (hello)" $ Named "hello" (ref "hello")
+      check "ex1 = (a b)" $ Named "ex1" ("a" ! "b")
+      check "ex2 = (a b c d)" $ Named "ex2" $ "a" ! "b" ! "c" ! "d"
+      check "ex3 = (a, b, c, d)" $ Named "ex3" $ "a" ! ("b" ! ("c" ! "d"))
+      check "ex4 ab cd = (ef gh)" $ Named "ex4" ("ab" \ "cd" \ ("ef" ! "gh"))
   describe "parseIndent" do
     let check strings = shouldEqual (parseIndent strings)
     it "works" do
@@ -38,7 +37,8 @@ a
 c
   d
   e
-    f""" [
+    f
+  g""" [
       Block "a" [
         Block "b" []
       ],
@@ -46,6 +46,17 @@ c
         Block "d" [],
         Block "e" [
           Block "f" []
-        ]
+        ],
+        Block "g" []
       ]
     ]
+  describe "blocksToAst" do
+    let check string ast = shouldEqual (blocksToAst (ref "main") (parseBlocks string)) ast
+    it "works" do
+      check "main = a" $ (("main" \ "main") ! "a")
+      check "main = a a" $ (("main" \ "main") ! ("a" ! "a"))
+      check "main x = a" $ (("main" \ "main") ! ("x" \ "a"))
+      check "main x = a a" $ (("main" \ "main") ! ("x" \ ("a" ! "a")))
+      check "main x y = (a)" $ (("main" \ "main") ! ("x" \ "y" \ "a"))
+      check "main x y = a" $ (("main" \ "main") ! ("x" \ "y" \ "a"))
+      check "main x y = (a)\n  a z = (z)" $ ("main" \ "main") ! (("a" \ "x" \ "y" \ "a") ! ("z" \ "z"))

@@ -1,6 +1,6 @@
 module Test.Lambda.Control.Evaluate where
 
-import Prelude (Unit, unit, discard, ($))
+import Prelude (Unit, unit, discard)
 import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Runner (RunnerEffects)
 import Test.Spec.Assertions (shouldEqual)
