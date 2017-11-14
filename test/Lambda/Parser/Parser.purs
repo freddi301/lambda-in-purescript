@@ -61,6 +61,7 @@ c
       check "main x y = (a)" $ (("main" \ "main") ! ("x" \ "y" \ "a"))
       check "main x y = a" $ (("main" \ "main") ! ("x" \ "y" \ "a"))
       check "main x y = (a)\n  a z = (z)" $ ("main" \ "main") ! (("a" \ "x" \ "y" \ "a") ! ("z" \ "z"))
+      check "main y = (f x = x)" $ (("main" \ "main") ! ("y" \ "x" \ "x"))
   describe "parseProgram" do
     it "works for booleanic" do
       shouldEqual (parseProgram booleanic) (parseProgram booleanic)

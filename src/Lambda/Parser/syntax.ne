@@ -1,14 +1,17 @@
 @builtin "whitespace.ne"
 
 MAIN ->
-  _ ASSOCIATION _ {% d => d[1] %}
+  _ FUNCTION _ {% d => d[1] %}
 
 LEAF ->
   REFERENCE {% d => d[0] %}
 | PARENS {% d => d[0] %}
 
-ASSOCIATION ->
+FUNCTION ->
   ARGUMENTS "=" _ BODY {% d => named(d[0][0])(d[0].slice(1).reverse().reduce((body, head) => abs(head)(body), d[3])) %}
+
+INLINE_FUNCTION ->
+  ARGUMENTS "=" _ BODY {% d => d[0].slice(1).reverse().reduce((body, head) => abs(head)(body), d[3]) %}
 
 ARGUMENTS ->
   (WORD __):+ {% d => d[0].map(i => i[0]) %}
@@ -20,7 +23,8 @@ BODY ->
 | REFERENCE {% d => d[0] %}
 
 PARENS ->
-  "(" _ PAIR_LEFT _ ")" {% d => d[2] %}
+  "(" _ INLINE_FUNCTION _ ")" {% d => d[2] %}
+| "(" _ PAIR_LEFT _ ")" {% d => d[2] %}
 | "(" _ PAIR_RIGHT _ ")" {% d => d[2] %}
 | "(" _ PARENS _ ")" {% d => d[2] %}
 | "(" _ REFERENCE _ ")" {% d => d[2] %}

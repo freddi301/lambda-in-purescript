@@ -12,7 +12,6 @@ import Data.String.Regex.Unsafe (unsafeRegex)
 import Lambda.Data.Ast (Ast(..), Named(..))
 
 -- | TODO: keep source info
--- | TODO: no parens in association body
 foreign import parse :: String -> Named
 
 data IndentLevel = IndentLevel Int String 

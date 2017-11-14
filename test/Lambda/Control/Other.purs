@@ -3,9 +3,7 @@ module Test.Lambda.Control.Other where
 import Data.Map as Map
 import Lambda.Control.Other (evaluate)
 import Lambda.Data.Ast (Ast, (!), (\))
-import Lambda.Parser.Parser (parseProgram)
-import Prelude (Unit, discard, (>>>))
-import Test.Lambda.Sources.Booleanic (booleanic)
+import Prelude (Unit, discard)
 import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)

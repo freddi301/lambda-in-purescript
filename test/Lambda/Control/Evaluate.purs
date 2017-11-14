@@ -5,7 +5,7 @@ import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluate, reifyEvalu
 import Lambda.Data.Ast (Ast(..), (!), (\))
 import Lambda.Parser.Parser (parseProgram)
 import Prelude (Unit, unit, discard, (>>>))
-import Test.Lambda.Sources.Booleanic (booleanic, booleanicMCSE, combinatorY)
+import Test.Lambda.Sources.Booleanic (booleanic, booleanicMCSE)
 import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
@@ -114,6 +114,8 @@ test = describe "Evaluate" do
         -- it "works for x => f x" do -- | TODO: η-conversion
         --   re ("x" \ "f" ! "x") `shouldEqual` (Reference "f" unit)
       describe "program checks" do
+        it "works for symbolic execution from sub-block" do
+          shouldEqual ((parseProgram >>> re) "main x y = a x\n  a z = z") ("x" \ "y" \ "x")
         it "works for booleanic" do
           shouldEqual ((parseProgram >>> re) booleanic) ("a" \ "b" \ "a")
           shouldEqual ((parseProgram >>> re) booleanicMCSE) ("a" \ "b" \ "a")
