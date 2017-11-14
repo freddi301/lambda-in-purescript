@@ -16,7 +16,7 @@ test = describe "Ast" do
   describe "prettyPrint" do
     it "works" do
       shouldEqual (prettyPrint ("x" \ "y" \ "x")) "(x => y => x)"
-      shouldEqual (prettyPrint ("x" \ ("x" ! "x" ! "x"))) "(x => (x x x))"
+      shouldEqual (prettyPrint ("x" \ ("x" ! "x" ! "x"))) "(x => x x x)"
   describe "eq" do
     it "works" do
       ((Reference "a" unit) == (Reference "a" unit)) `shouldEqual` true

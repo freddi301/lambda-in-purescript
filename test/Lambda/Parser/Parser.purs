@@ -1,8 +1,9 @@
 module Test.Lambda.Parser.Parser where
 
 import Lambda.Data.Ast (ref, (\), (!), Named(..))
-import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parse, parseBlocks, parseIndent)
+import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parse, parseBlocks, parseIndent, parseProgram)
 import Prelude (Unit, discard, ($))
+import Test.Lambda.Sources.Booleanic (booleanic)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
@@ -60,3 +61,7 @@ c
       check "main x y = (a)" $ (("main" \ "main") ! ("x" \ "y" \ "a"))
       check "main x y = a" $ (("main" \ "main") ! ("x" \ "y" \ "a"))
       check "main x y = (a)\n  a z = (z)" $ ("main" \ "main") ! (("a" \ "x" \ "y" \ "a") ! ("z" \ "z"))
+  describe "parseProgram" do
+    it "works for booleanic" do
+      shouldEqual (parseProgram booleanic) (parseProgram booleanic)
+

@@ -1,14 +1,14 @@
 module Test.Lambda.Control.Other where
 
-import Prelude (Unit, discard)
-import Test.Spec (Spec, describe, it, pending)
-import Test.Spec.Runner (RunnerEffects)
-import Test.Spec.Assertions (shouldEqual)
-
 import Data.Map as Map
-
-import Lambda.Data.Ast (Ast, (!), (\))
 import Lambda.Control.Other (evaluate)
+import Lambda.Data.Ast (Ast, (!), (\))
+import Lambda.Parser.Parser (parseProgram)
+import Prelude (Unit, discard, (>>>))
+import Test.Lambda.Sources.Booleanic (booleanic)
+import Test.Spec (Spec, describe, it, pending)
+import Test.Spec.Assertions (shouldEqual)
+import Test.Spec.Runner (RunnerEffects)
 
 eval :: (Ast String Unit) -> { scope :: Map.Map String (Ast String Unit), term :: (Ast String Unit) }
 eval term = evaluate { scope: Map.empty, term }
@@ -44,3 +44,6 @@ test = describe "evaluate" do
   pending "list"
   pending "church numerals"
   pending "Y combinator"
+  -- describe "program checks" do
+  --   it "works for booleanic" do
+  --     shouldEqual ((parseProgram >>> ev) booleanic) ("a" \ "b" \ "a")

@@ -1,6 +1,7 @@
 module Lambda.Data.Ast where
 
 import Prelude
+import Data.String (take, length, drop)
 
 -- | `Ast` is the representation of untyped lambda calculus in `first-order abstract syntax` form
 -- | `reference` data type used to represent variable names (ex `String`)
@@ -33,6 +34,8 @@ prettyPrint (Reference name _) = name
 prettyPrint (Application (Application leftLeft leftRight _) right _) = "(" <> prettyPrint leftLeft <> " " <> prettyPrint leftRight <> " " <> prettyPrint right <> ")"
 prettyPrint (Application left right _) = "(" <> prettyPrint left <> " " <> prettyPrint right <> ")"
 prettyPrint (Abstraction head (Abstraction headRight bodyRight _) _) = "(" <> head <> " => " <> headRight <> " => " <> prettyPrint bodyRight <> ")"
+prettyPrint (Abstraction head body@(Application _ _ _) _) = "(" <> head <> " => " <> removeParens (prettyPrint body) <> ")" where
+  removeParens string = (take ((length string) - 2)) (drop 1 string) 
 prettyPrint (Abstraction head body _) = "(" <> head <> " => " <> prettyPrint body <> ")"
 
 -- | operators for friendlier construction of the ast

@@ -1,14 +1,14 @@
 module Test.Lambda.Control.Evaluate where
 
-import Prelude (Unit, unit, discard)
-import Test.Spec (Spec, describe, it, pending)
-import Test.Spec.Runner (RunnerEffects)
-import Test.Spec.Assertions (shouldEqual)
-
 import Data.Set as Set
-
-import Lambda.Data.Ast (Ast(..), (!), (\))
 import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluate, reifyEvaluateSymbolic)
+import Lambda.Data.Ast (Ast(..), (!), (\))
+import Lambda.Parser.Parser (parseProgram)
+import Prelude (Unit, unit, discard, (>>>))
+import Test.Lambda.Sources.Booleanic (booleanic, booleanicMCSE, combinatorY)
+import Test.Spec (Spec, describe, it, pending)
+import Test.Spec.Assertions (shouldEqual)
+import Test.Spec.Runner (RunnerEffects)
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Evaluate" do
@@ -49,6 +49,12 @@ test = describe "Evaluate" do
     pending "list"
     pending "church numerals"
     pending "Y combinator"
+    -- describe "program checks" do
+    --   it "works for booleanic" do
+    --     shouldEqual ((parseProgram >>> re) booleanic) ("a" \ "b" \ "a")
+      -- it "works for Y fixed point" do
+      --     shouldEqual ((parseProgram >>> re) combinatorY) ("a" \ "a")
+
   describe "reifyEvaluateSymbolic" do
     let re = reifyEvaluateSymbolic 0
     it "identity" do
@@ -107,3 +113,9 @@ test = describe "Evaluate" do
           re ("x" \ "y" \ ("x" ! (("z" \ "w" \ "z") ! "y"))) `shouldEqual` ("x" \ "y" \ ("x" ! ("w" \ "y")))
         -- it "works for x => f x" do -- | TODO: η-conversion
         --   re ("x" \ "f" ! "x") `shouldEqual` (Reference "f" unit)
+      describe "program checks" do
+        it "works for booleanic" do
+          shouldEqual ((parseProgram >>> re) booleanic) ("a" \ "b" \ "a")
+          shouldEqual ((parseProgram >>> re) booleanicMCSE) ("a" \ "b" \ "a")
+        -- it "works for Y fixed point" do
+        --   shouldEqual ((parseProgram >>> re) combinatorY) ("a" \ "a")

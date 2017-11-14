@@ -8,12 +8,10 @@ LEAF ->
 | PARENS {% d => d[0] %}
 
 ASSOCIATION ->
-  WORD _ "=" _ BODY {% d => named(d[0])(d[4]) %}
-| WORD __ ARGUMENTS _ "=" _ BODY {% d => named(d[0])(d[2].reverse().reduce((body, head) => abs(head)(body), d[6])) %}
+  ARGUMENTS "=" _ BODY {% d => named(d[0][0])(d[0].slice(1).reverse().reduce((body, head) => abs(head)(body), d[3])) %}
 
 ARGUMENTS ->
-  WORD {% d => [d[0]] %}
-| ARGUMENTS __ WORD {% d => d[0].concat([d[2]]) %}
+  (WORD __):+ {% d => d[0].map(i => i[0]) %}
 
 BODY ->
   PARENS {% d => d[0] %}
