@@ -1,9 +1,8 @@
 module Lambda.Control.Evaluate where
 
-import Prelude (class Eq, class Ord, ($), (==), (+))
 import Data.Set as Set
-
 import Lambda.Data.Ast (Ast(..), mapReference)
+import Prelude (class Eq, class Ord, ($), (==), (+))
 
 -- | `reify` takes a reference and substitutes every occurrence of it respecting lexical scoping rules
 -- | it corresponds to β-reduction

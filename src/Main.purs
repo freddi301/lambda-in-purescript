@@ -38,3 +38,23 @@ main = do
 -- | TODO: make possible recursive function by name  
 
 -- | TODO: make possible recursive function by name (for inline functions)
+
+
+-- | TODO: lazy, eager, symbolic evaluation
+
+-- | LAZY: pro: most efficient execution cons: unpredictable performance
+
+-- | EAGER: pro: good for debugging, can indicate when execute cons: some unused arguments could be evaluated
+
+-- | SYMBOLIC: pro: good for suggestins and metaprogramming cons: executes unneded code
+
+-- | symbolic at compile time, eager at debug, lazy at runtime
+
+-- | a naive implementation of and execution broker could be 3 queues
+-- | lazy, eager, symbolic, where the evaluations will be partitioned
+-- | naively the all the jobs from lazy would be executed before proceeding to eager and so on
+-- | but a worker could get a task from eager before all from lazy are executed based on data locality (aka cost)
+
+-- TODO: hoisting and mutually recursive function
+
+-- TODO: memoization
