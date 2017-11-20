@@ -55,6 +55,56 @@ main = do
 -- | naively the all the jobs from lazy would be executed before proceeding to eager and so on
 -- | but a worker could get a task from eager before all from lazy are executed based on data locality (aka cost)
 
--- TODO: hoisting and mutually recursive function
+-- | TODO: hoisting and mutually recursive function
 
--- TODO: memoization
+-- | TODO: memoization
+
+-- | TODO: inference
+
+-- | TODO: single step evaluation
+
+-- | TODO: infix operators
+
+-- | TODO: autocompletion
+
+-- | TODO: wrap syntax errors
+
+-- | TODO: prettify
+
+-- | TODO: import system
+
+-- | TODO: atoms
+
+-- | TODO: FFI
+
+-- | TODO: implement standard data structures
+
+-- | TODO: access to code by path (use names hierarchy)
+
+-- | TODO: documentation
+
+-- | TODO: documentation generation
+
+-- | TODO: playground
+
+-- | TODO: named parameters
+
+-- | TODO: common design patterns (ex: dependency injection)
+
+-- | TODO: common functional data structures
+
+-- | TODO: implement unit testing
+
+-- | TODO: good practices assistan (clean code, code complete, TDD, DDD, PEA, GOF)
+
+-- | TODO: implemet other languages features
+
+-- | TODO: refactoring tools
+
+-- | TODO: code navigation and view tools
+
+-- | TODO: refactor
+
+-- | TODO: bundling for browser and node with npm and bower
+
+-- | TODO: finish tests

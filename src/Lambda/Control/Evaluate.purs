@@ -15,16 +15,32 @@ reify ref value term = case term of
   Abstraction head body decoration -> if ref == head then term else Abstraction head (reify ref value body) decoration
   Application left right decoration -> Application (reify ref value left) (reify ref value right) decoration
 
--- | `reifyEvaluate` evaluates a lambda term using the reify mechanism
+-- | `reifyEvaluateEager` evaluates a lambda term using the reify mechanism
 -- | the execution is eager
 -- | there is no scope, as soon variable gets bound, every occurrence is substituted with its value
-reifyEvaluate :: ∀ reference decoration . Eq reference => Ast reference decoration -> Ast reference decoration
-reifyEvaluate term = case term of
-  Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> reifyEvaluate $ reify head right body
-  Application left right decoration -> reifyEvaluate $ Application (reifyEvaluate left) (reifyEvaluate right) decoration
+reifyEvaluateEager :: ∀ reference decoration . Eq reference => Ast reference decoration -> Ast reference decoration
+reifyEvaluateEager term = case term of
+  Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> reifyEvaluateEager $ reify head right body
+  Application left right decoration -> reifyEvaluateEager $ Application (reifyEvaluateEager left) (reifyEvaluateEager right) decoration
   _ -> term
 
--- | `reifyEvaluateSymbolic` same as `reifyEvaluate` enhanced with symbolic execution
+reifyEvaluateEagerSingleStep :: ∀ reference decoration . Eq reference => Ast reference decoration -> Ast reference decoration
+reifyEvaluateEagerSingleStep term = case term of
+  Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> reify head right body
+  Application left@(Abstraction _ _ _) right decoration -> Application left (reifyEvaluateEagerSingleStep right) decoration
+  Application left right@(Abstraction _ _ _) decoration -> Application (reifyEvaluateEagerSingleStep left) right decoration
+  _ -> term
+
+-- | `reifyEvaluateLazy` evaluates a lambda term using the reify mechanism
+-- | the execution is lazy, application right side is not evaluated until needed 
+-- | there is no scope, as soon variable gets bound, every occurrence is substituted with its value
+reifyEvaluateLazy :: ∀ reference decoration . Eq reference => Ast reference decoration -> Ast reference decoration
+reifyEvaluateLazy term = case term of
+  Application (Abstraction head body _) right _ -> reifyEvaluateLazy $ reify head right body
+  Application left right decoration -> reifyEvaluateLazy $ Application (reifyEvaluateLazy left) right decoration
+  _ -> term
+
+-- | `reifyEvaluateSymbolic` same as `reifyEvaluateEager` enhanced with symbolic execution
 -- | obtained by recursive α-conversion in abstraction bodies
 -- | https://en.wikipedia.org/wiki/Symbolic_execution
 reifyEvaluateSymbolic :: ∀ reference decoration . Eq reference =>

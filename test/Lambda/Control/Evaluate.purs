@@ -1,7 +1,7 @@
 module Test.Lambda.Control.Evaluate where
 
 import Data.Set as Set
-import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluate, reifyEvaluateSymbolic)
+import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluateEager, reifyEvaluateEagerSingleStep, reifyEvaluateLazy, reifyEvaluateSymbolic)
 import Lambda.Data.Ast (Ast(..), (!), (\))
 import Lambda.Parser.Parser (parseProgram)
 import Prelude (Unit, unit, discard, (>>>))
@@ -21,8 +21,8 @@ test = describe "Evaluate" do
       check [] ("x" \ "y" \ ("c" ! "x")) ["c"]
       let false_ = "x" \ "y" \ "y"
       check [] false_ []
-  describe "reifyEvaluate" do
-    let re = reifyEvaluate
+  describe "reifyEvaluateEager" do
+    let re = reifyEvaluateEager
     it "identity" do
       (re (("x" \ "x") ! ("y" \ "y"))) `shouldEqual` ("y" \ "y")
     describe "booleans" do
@@ -54,6 +54,77 @@ test = describe "Evaluate" do
     --     shouldEqual ((parseProgram >>> re) booleanic) ("a" \ "b" \ "a")
       -- it "works for Y fixed point" do
       --     shouldEqual ((parseProgram >>> re) combinatorY) ("a" \ "a")
+  describe "reifyEvaluateEagerSingleStep" do
+    let re = reifyEvaluateEagerSingleStep
+    it "identity" do
+      (re (("x" \ "x") ! ("y" \ "y"))) `shouldEqual` ("y" \ "y")
+    describe "booleans" do
+      let true_ = "x" \ "y" \ "x"
+      let false_ = "x" \ "y" \ "y"
+      let not_ = "p" \ "p" ! false_ ! true_
+      let and_ = "a" \ "b" \ "a" ! "b" ! false_
+      let or_ = "a" \ "b" \ "a" ! true_ ! "b"
+      describe "respects 'not' truth table" do
+        it "works for not true" do
+          let step0 = (not_ ! true_)
+          let step1 = re step0
+          step1 `shouldEqual` (true_ ! false_ ! true_)
+          let step2 = re step1
+          step2 `shouldEqual` (("y" \ false_) ! true_)
+          let step3 = re step2
+          step3 `shouldEqual` false_
+
+      -- (re (not_ ! false_)) `shouldEqual` true_
+      
+    --   it "respects 'and' truth table" do
+    --     re (and_ ! true_ ! true_) `shouldEqual` true_
+    --     re (and_ ! true_ ! false_) `shouldEqual` false_
+    --     re (and_ ! false_ ! true_) `shouldEqual` false_
+    --     re (and_ ! false_ ! false_) `shouldEqual` false_
+    --   it "respects 'or' truth table" do
+    --     re (or_ ! true_ ! true_) `shouldEqual` true_
+    --     re (or_ ! true_ ! false_) `shouldEqual` true_
+    --     re (or_ ! false_ ! true_) `shouldEqual` true_
+    --     re (or_ ! false_ ! false_) `shouldEqual` false_
+    --   it "works with nested" do
+    --     re (or_ ! (and_ ! true_ ! true_) ! (not_ ! true_)) `shouldEqual` true_
+    -- pending "list"
+    -- pending "church numerals"
+    -- pending "Y combinator"
+    -- describe "program checks" do
+    --   it "works for booleanic" do
+    --     shouldEqual ((parseProgram >>> re) booleanic) ("a" \ "b" \ "a")
+      -- it "works for Y fixed point" do
+      --     shouldEqual ((parseProgram >>> re) combinatorY) ("a" \ "a")
+  describe "reifyEvaluateLazy" do
+    let re = reifyEvaluateLazy
+    it "identity" do
+      (re (("x" \ "x") ! ("y" \ "y"))) `shouldEqual` ("y" \ "y")
+    describe "booleans" do
+      let true_ = "x" \ "y" \ "x"
+      let false_ = "x" \ "y" \ "y"
+      let not_ = "p" \ "p" ! false_ ! true_
+      let and_ = "a" \ "b" \ "a" ! "b" ! false_
+      let or_ = "a" \ "b" \ "a" ! true_ ! "b"
+      it "respects 'not' truth table" do
+        (re (not_ ! true_)) `shouldEqual` false_
+        (re (not_ ! false_)) `shouldEqual` true_
+        (re (true_ ! (not_ ! true_))) `shouldEqual` ("y" \ (not_ ! true_))
+      it "respects 'and' truth table" do
+        re (and_ ! true_ ! true_) `shouldEqual` true_
+        re (and_ ! true_ ! false_) `shouldEqual` false_
+        re (and_ ! false_ ! true_) `shouldEqual` false_
+        re (and_ ! false_ ! false_) `shouldEqual` false_
+      it "respects 'or' truth table" do
+        re (or_ ! true_ ! true_) `shouldEqual` true_
+        re (or_ ! true_ ! false_) `shouldEqual` true_
+        re (or_ ! false_ ! true_) `shouldEqual` true_
+        re (or_ ! false_ ! false_) `shouldEqual` false_
+      it "works with nested" do
+        re (or_ ! (and_ ! true_ ! true_) ! (not_ ! true_)) `shouldEqual` true_
+    pending "list"
+    pending "church numerals"
+    pending "Y combinator"
 
   describe "reifyEvaluateSymbolic" do
     let re = reifyEvaluateSymbolic 0
