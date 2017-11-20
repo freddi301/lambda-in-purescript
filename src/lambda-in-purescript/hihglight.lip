@@ -1,0 +1,4 @@
+fun arg1 arg2 = result
+  midfun x = x * x
+  result = midfun arg1 arg2 hahah
+    haha x y = tiso (f x = x)

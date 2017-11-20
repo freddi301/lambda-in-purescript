@@ -21,7 +21,7 @@ main = do
 
 -- | TODO: source maps
 
--- | TODO: syntax highlight
+-- | TODO: syntax highlight (partially implemented as vscode language support)
 
 -- | TODO: resolve some non terminating samples
 

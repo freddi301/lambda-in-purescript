@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>name</key>
+    <string>lambda-in-purescript</string>
+    <key>scopeName</key>
+    <string>source.lambda-in-purescript</string>
+    <key>fileTypes</key>
+    <array>
+      <string>lip</string>
+    </array>
+    <key>patterns</key>
+    <array>
+      <dict>
+        <key>name</key>
+        <string>haha</string>
+        <key>match</key>
+        <string>(\w+)\s+([\w\s]*)(=)</string>
+        <key>captures</key>
+        <dict>
+          <key>1</key>
+          <dict>
+            <key>name</key>
+            <string>entity.name.function</string>
+          </dict>
+          <key>2</key>
+          <dict>
+            <key>name</key>
+            <string>variable.parameter</string>
+          </dict>
+          <key>3</key>
+          <dict>
+            <key>name</key>
+            <string>keyword.operator</string>
+          </dict>
+        </dict>
+      </dict>
+    </array>
+  </dict>
+</plist>
