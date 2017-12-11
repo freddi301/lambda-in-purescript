@@ -25,8 +25,6 @@ main = do
 
 -- | TODO: resolve some non terminating samples
 
--- | TODO: make available function variables to indented block
-
 -- | TODO: analyze program for code duplication
 
 -- | TODO: check for undeclared variables
