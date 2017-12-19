@@ -1,51 +1,63 @@
 @builtin "whitespace.ne"
 
 MAIN ->
-  _ FUNCTION _ {% d => d[1] %}
+  _ FUNCTION _ {% ([lspace, fun, rspace]) => fun %}
 
 LEAF ->
-  REFERENCE {% d => d[0] %}
-| PARENS {% d => d[0] %}
+  REFERENCE {% ([reference]) => reference %}
+| PARENS {% ([parens]) => parens %}
 
 FUNCTION ->
-  ARGUMENTS "=" _ BODY {% d => named(d[0][0])(d[0].slice(1).reverse().reduce((body, head) => abs(head)(body), d[3])) %}
+  ARGUMENTS "=" _ BODY {% ([[name, ...args], equal, space, body]) => named(name)(args.reverse().reduce((body, head) => abs(head)(body), body)) %}
 
 INLINE_FUNCTION ->
-  ARGUMENTS "=" _ BODY {% d => d[0].slice(1).reverse().reduce((body, head) => abs(head)(body), d[3]) %}
+  ARGUMENTS "=" _ BODY {% ([[name, ...args], equal, space, body]) => args.reverse().reduce((body, head) => abs(head)(body), body) %}
 
 ARGUMENTS ->
-  (WORD __):+ {% d => d[0].map(i => i[0]) %}
+  (WORD __):+ {% ([words, space]) => words.map(([word]) => word) %}
 
+@{%
+  const body = ([term]) => term
+%}
 BODY ->
-  PARENS {% d => d[0] %}
-| PAIR_LEFT {% d => d[0] %}
-| PAIR_RIGHT {% d => d[0] %}
-| REFERENCE {% d => d[0] %}
+  PARENS {% body %}
+| PAIR_LEFT {% body %}
+| PAIR_RIGHT {% body %}
+| REFERENCE {% body %}
 
+@{%
+  const parens = ([lparens, lspace, term, rspace, rparens]) => term
+%}
 PARENS ->
-  "(" _ INLINE_FUNCTION _ ")" {% d => d[2] %}
-| "(" _ PAIR_LEFT _ ")" {% d => d[2] %}
-| "(" _ PAIR_RIGHT _ ")" {% d => d[2] %}
-| "(" _ PARENS _ ")" {% d => d[2] %}
-| "(" _ REFERENCE _ ")" {% d => d[2] %}
+  "(" _ INLINE_FUNCTION _ ")" {% parens %}
+| "(" _ PAIR_LEFT _ ")" {% parens %}
+| "(" _ PAIR_RIGHT _ ")" {% parens %}
+| "(" _ PARENS _ ")" {% parens %}
+| "(" _ REFERENCE _ ")" {% parens %}
 
+@{%
+  const pairRight = ([left, lspace, comma, rspace, right]) => app(left)(right)
+%}
 PAIR_RIGHT ->
-  LEAF _ "," _ LEAF {% d => app(d[0])(d[4]) %}
-| LEAF _ "," _ PAIR_RIGHT {% d => app(d[0])(d[4]) %}
-| LEAF _ "," _ PAIR_LEFT {% d => app(d[0])(d[4]) %}
-| PAIR_LEFT _ "," _ LEAF {% d => app(d[0])(d[4]) %}
-| PAIR_LEFT _ "," _ PAIR_LEFT {% d => app(d[0])(d[4]) %}
-| PAIR_LEFT _ "," _ PAIR_RIGHT {% d => app(d[0])(d[4]) %}
-| LEAF _ "," {% d => d[0] %}
+  LEAF _ "," _ LEAF {% pairRight %}
+| LEAF _ "," _ PAIR_RIGHT {% pairRight %}
+| LEAF _ "," _ PAIR_LEFT {% pairRight %}
+| PAIR_LEFT _ "," _ LEAF {% pairRight %}
+| PAIR_LEFT _ "," _ PAIR_LEFT {% pairRight %}
+| PAIR_LEFT _ "," _ PAIR_RIGHT {% pairRight %}
+| LEAF _ "," {% pairRight %}
 
+@{%
+  const pairLeft = ([left, space, right])=> app(left)(right)
+%}
 PAIR_LEFT ->
-  PARENS _ PARENS {% d => app(d[0])(d[2]) %}
-| PARENS _ REFERENCE {% d => app(d[0])(d[2]) %}
-| REFERENCE _ PARENS {% d => app(d[0])(d[2]) %}
-| REFERENCE __ REFERENCE {% d => app(d[0])(d[2]) %}
-| PAIR_LEFT _ PARENS {% d => app(d[0])(d[2]) %}
-| PAIR_LEFT __ REFERENCE {% d => app(d[0])(d[2]) %}
+  PARENS _ PARENS {% pairLeft %}
+| PARENS _ REFERENCE {% pairLeft %}
+| REFERENCE _ PARENS {% pairLeft %}
+| REFERENCE __ REFERENCE {% pairLeft %}
+| PAIR_LEFT _ PARENS {% pairLeft %}
+| PAIR_LEFT __ REFERENCE {% pairLeft %}
 
-REFERENCE -> WORD {% d => ref(d[0]) %}
+REFERENCE -> WORD {% ([reference]) => ref(reference) %}
 
-WORD -> [^\s\n(),=]:+ {% d => d[0].join('') %}
+WORD -> [^\s\n(),=]:+ {% ([chars]) => chars.join('') %}
