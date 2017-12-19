@@ -1,7 +1,7 @@
 module Test.Lambda.Control.Evaluate where
 
 import Data.Set as Set
-import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluateEager, reifyEvaluateEagerSingleStep, reifyEvaluateLazy, reifyEvaluateSymbolic)
+import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluateEager, reifyEvaluateEagerSingleStep, reifyEvaluateLazy, reifyEvaluateLazySingleStep, reifyEvaluateSymbolic)
 import Lambda.Data.Ast (Ast(..), (!), (\))
 import Lambda.Parser.Parser (parseProgram)
 import Prelude (Unit, unit, discard, (>>>))
@@ -125,6 +125,18 @@ test = describe "Evaluate" do
     pending "list"
     pending "church numerals"
     pending "Y combinator"
+  describe "reifyEvaluateLazySingleStep" do
+    let re = reifyEvaluateLazySingleStep
+    it "identity" do
+      (re (("x" \ "x") ! ("y" \ "y"))) `shouldEqual` ("y" \ "y")
+    describe "booleans" do
+      let true_ = "x" \ "y" \ "x"
+      let false_ = "x" \ "y" \ "y"
+      let not_ = "p" \ "p" ! false_ ! true_
+      it "respects 'not' truth table" do
+        ((re >>> re >>> re) (not_ ! true_)) `shouldEqual` false_
+        ((re >>> re >>> re) (not_ ! false_)) `shouldEqual` true_
+        ((re >>> re >>> re >>> re) (true_ ! (not_ ! true_))) `shouldEqual` ("y" \ (not_ ! true_))
 
   describe "reifyEvaluateSymbolic" do
     let re = reifyEvaluateSymbolic 0

@@ -40,6 +40,12 @@ reifyEvaluateLazy term = case term of
   Application left right decoration -> reifyEvaluateLazy $ Application (reifyEvaluateLazy left) right decoration
   _ -> term
 
+reifyEvaluateLazySingleStep :: ∀ reference decoration . Eq reference => Ast reference decoration -> Ast reference decoration
+reifyEvaluateLazySingleStep term = case term of
+  Application (Abstraction head body _) right _ -> reify head right body
+  Application left right decoration -> Application (reifyEvaluateLazySingleStep left) right decoration
+  _ -> term
+
 -- | `reifyEvaluateSymbolic` same as `reifyEvaluateEager` enhanced with symbolic execution
 -- | obtained by recursive α-conversion in abstraction bodies
 -- | https://en.wikipedia.org/wiki/Symbolic_execution
