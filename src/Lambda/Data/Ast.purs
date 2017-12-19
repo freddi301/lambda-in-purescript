@@ -66,18 +66,43 @@ instance showNamed :: Show Named where show (Named name ast) = name <> " = " <> 
 
 -- | α-conversion for α-equivalence
 mangleReferences ::
-  forall reference decoration .
-  { ast :: Ast reference decoration, map :: Map.Map Int reference, i :: Int } ->
-  { ast :: Ast Int Unit, map :: Map.Map Int reference, i :: Int }
-mangleReferences { ast, map, i } = case ast of
-  (Reference name _) -> { ast: (Reference i unit), map: Map.insert i name map, i: i + 1 }
-  (Abstraction head body _) ->
-    let updatedMap = Map.insert i head map in
-    let bodyResult = mangleReferences { ast: body, map: updatedMap, i: i + 1 } in
-    let result = (Abstraction i bodyResult.ast unit) in
-    { ast: result, map: bodyResult.map, i: bodyResult.i }
-  (Application left right _) ->
-    let leftResult = mangleReferences { ast: left, map, i } in
-    let rightResult = mangleReferences { ast: right, map: leftResult.map, i: leftResult.i } in
-    let result = (Application leftResult.ast rightResult.ast unit) in
-    { ast: result, map: rightResult.map, i: rightResult.i }
+  ∀ reference decoration .
+  Eq reference =>
+  { ast :: Ast reference decoration, map :: Map.Map Int reference, symbol :: Int } ->
+  { ast :: Ast Int decoration, map :: Map.Map Int reference, symbol :: Int }
+mangleReferences { ast, map, symbol } = unwrapAst $ rec { ast: liftedAst, map, symbol } where
+  liftedAst = mapReference Unmangled ast
+  -- TODO: care for free references
+  rec { ast, map, symbol } = case ast of
+    (Reference (Mangled name) decoration) -> { ast, map, symbol }
+    (Reference (Unmangled name) decoration) ->
+      let resultAst = Reference (Mangled symbol) decoration in
+      let resultMap = Map.insert symbol name map in
+      let resultSymbol = symbol + 1 in
+      { ast: resultAst, map: resultMap, symbol: resultSymbol }
+    (Application left right decoration) ->
+      let leftResult = rec { ast: left, map, symbol } in
+      let rightResult = rec { ast: right, map: leftResult.map, symbol: leftResult.symbol } in
+      let resultAst = Application leftResult.ast rightResult.ast decoration in
+      { ast: resultAst, map: rightResult.map, symbol: rightResult.symbol }
+    (Abstraction (Mangled head) body decoration) -> { ast, map, symbol }
+    (Abstraction (Unmangled head) body decoration) ->
+      let nextMap = Map.insert symbol head map in
+      let nextSymbol = symbol + 1 in
+      let resultHead = Mangled symbol in
+      let reifiedBody = replaceReference (Unmangled head) resultHead body in
+      let bodyResult = rec { ast: reifiedBody, map: nextMap, symbol: nextSymbol } in
+      let resultAst = Abstraction resultHead bodyResult.ast decoration in
+      { ast: resultAst, map: bodyResult.map, symbol: bodyResult.symbol }
+  unwrapAst { ast, map, symbol } = { ast: mapReference unwrap ast, map, symbol }
+  unwrap (Mangled symbol) = symbol
+  unwrap (Unmangled name) = 666
+
+data Mangled reference symbol = Mangled symbol | Unmangled reference
+derive instance eqMangled :: (Eq reference, Eq symbol) => Eq (Mangled reference symbol)
+
+replaceReference :: ∀ reference decoration . Eq reference => reference -> reference -> Ast reference decoration -> Ast reference decoration
+replaceReference ref value term = case term of
+  Reference name decoration -> if ref == name then (Reference value decoration) else term
+  Abstraction head body decoration -> if ref == head then term else Abstraction head (replaceReference ref value body) decoration
+  Application left right decoration -> Application (replaceReference ref value left) (replaceReference ref value right) decoration

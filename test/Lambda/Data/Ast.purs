@@ -28,10 +28,11 @@ test = describe "Ast" do
       let false_ = "x" \ "y" \ "y"
       (true_ == false_) `shouldEqual` false
   describe "mangleReferences" do
-    let f = \ast -> (mangleReferences { ast, map: Map.empty, i: 0 }).ast
+    let f = \ast -> (mangleReferences { ast, map: Map.empty, symbol: 0 }).ast
     describe "gives comparable results for:" do
       it "x => x and y => y" do
         (f ("x" \ "x")) `shouldEqual` (f ("y" \ "y"))
+        (f ("x" \ "x")) `shouldEqual` (Abstraction 0 (Reference 0 unit) unit)
       it "a => b => a and c => d => c" do
         (f ("a" \ "b" \ "a")) `shouldEqual` (f ("c" \ "d" \ "c"))
-
+        (f ("a" \ "b" \ "a")) `shouldEqual` (Abstraction 0 (Abstraction 1 (Reference 0 unit) unit) unit)
