@@ -86,14 +86,3 @@ collectFreeReferences { free, scope, term } = case term of
   Abstraction head body _ -> collectFreeReferences { free, scope: Set.insert head scope, term: body }
 
 -- instance showSetReference :: (Show reference) => Show (Set.Set reference) where show = show <<< Foldable.foldr (Array.cons) []
-
--- | TODO: implement α-conversion with `de bruijn`` indices for α-equivalence
--- | toBrujin :: ∀ reference decoration . Ast reference decoration -> Ast Unit decoration
-
--- | TODO: implement η-conversion (eta-conversion)
-
--- | TODO: η-conversion + α-conversion + α-equivalence can be used to validate laws (example comonad laws)
-
--- | TODO: parallel execution
-
--- | TODO: distributed execution

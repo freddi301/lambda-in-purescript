@@ -2,6 +2,7 @@ module Lambda.Data.Ast where
 
 import Prelude
 import Data.String (take, length, drop)
+import Data.Map as Map
 
 -- | `Ast` is the representation of untyped lambda calculus in `first-order abstract syntax` form
 -- | `reference` data type used to represent variable names (ex `String`)
@@ -25,9 +26,9 @@ mapReference f (Application left right decoration) = Application (mapReference f
 mapReference f (Abstraction head body decoration) = Abstraction (f head) (mapReference f body) decoration
 
 instance showAst :: (Show reference, Show decoration) => Show (Ast reference decoration) where
-  show (Reference name decoration) = show decoration <> show name
-  show (Application left right decoration) = show decoration <> "(" <> show left <> " " <> show right <> ")"
-  show (Abstraction head body decoration) = show decoration <> "(" <> show head <> " => " <> show body <> ")"
+  show (Reference name decoration) = show name
+  show (Application left right decoration) = "(" <> show left <> " " <> show right <> ")"
+  show (Abstraction head body decoration) = "(" <> show head <> " => " <> show body <> ")"
 
 prettyPrint :: Ast String Unit -> String
 prettyPrint (Reference name _) = name
@@ -57,9 +58,26 @@ app :: Ast String Unit -> Ast String Unit -> Ast String Unit
 app left right = Application left right unit
 abs :: String -> Ast String Unit -> Ast String Unit
 abs head body = Abstraction head body unit
--- derive instance showAstStringUnit :: Show (Ast String Unit)
-derive instance eqAstStringUnit :: Eq (Ast String Unit)
+derive instance eqAst :: (Eq reference, Eq decoration) => Eq (Ast reference decoration)
 
 data Named = Named String (Ast String Unit)
 derive instance eqNamed :: Eq Named
 instance showNamed :: Show Named where show (Named name ast) = name <> " = " <> show ast
+
+-- | α-conversion for α-equivalence
+mangleReferences ::
+  forall reference decoration .
+  { ast :: Ast reference decoration, map :: Map.Map Int reference, i :: Int } ->
+  { ast :: Ast Int Unit, map :: Map.Map Int reference, i :: Int }
+mangleReferences { ast, map, i } = case ast of
+  (Reference name _) -> { ast: (Reference i unit), map: Map.insert i name map, i: i + 1 }
+  (Abstraction head body _) ->
+    let updatedMap = Map.insert i head map in
+    let bodyResult = mangleReferences { ast: body, map: updatedMap, i: i + 1 } in
+    let result = (Abstraction i bodyResult.ast unit) in
+    { ast: result, map: bodyResult.map, i: bodyResult.i }
+  (Application left right _) ->
+    let leftResult = mangleReferences { ast: left, map, i } in
+    let rightResult = mangleReferences { ast: right, map: leftResult.map, i: leftResult.i } in
+    let result = (Application leftResult.ast rightResult.ast unit) in
+    { ast: result, map: rightResult.map, i: rightResult.i }

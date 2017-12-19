@@ -1,6 +1,7 @@
 module Test.Lambda.Data.Ast where
 
 import Prelude (Unit, discard, show, (==), unit)
+import Data.Map as Map
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Runner (RunnerEffects)
 import Test.Spec.Assertions (shouldEqual)
@@ -11,8 +12,10 @@ test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Ast" do
   describe "show" do
     it "works" do
-      shouldEqual (show ("x" \ "y" \ "x")) "unit(\"x\" => unit(\"y\" => unit\"x\"))"
-      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "unit(\"x\" => unit(unit(unit\"x\" unit\"x\") unit\"x\"))"
+      -- shouldEqual (show ("x" \ "y" \ "x")) "unit(\"x\" => unit(\"y\" => unit\"x\"))"
+      -- shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "unit(\"x\" => unit(unit(unit\"x\" unit\"x\") unit\"x\"))"
+      shouldEqual (show ("x" \ "y" \ "x")) "(\"x\" => (\"y\" => \"x\"))"
+      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(\"x\" => ((\"x\" \"x\") \"x\"))"
   describe "prettyPrint" do
     it "works" do
       shouldEqual (prettyPrint ("x" \ "y" \ "x")) "(x => y => x)"
@@ -24,3 +27,11 @@ test = describe "Ast" do
       let true_ = "x" \ "y" \ "x"
       let false_ = "x" \ "y" \ "y"
       (true_ == false_) `shouldEqual` false
+  describe "mangleReferences" do
+    let f = \ast -> (mangleReferences { ast, map: Map.empty, i: 0 }).ast
+    describe "gives comparable results for:" do
+      it "x => x and y => y" do
+        (f ("x" \ "x")) `shouldEqual` (f ("y" \ "y"))
+      it "a => b => a and c => d => c" do
+        (f ("a" \ "b" \ "a")) `shouldEqual` (f ("c" \ "d" \ "c"))
+
