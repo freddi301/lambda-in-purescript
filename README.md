@@ -114,3 +114,7 @@ but a worker could get a task from eager before all from lazy are executed based
 - stackless interpret (lazy, eager, symbolic)
 
 - extract value (using symbolic execution)
+
+- compiler ANF backaend llvm?
+
+- rust-wasm interpreter
