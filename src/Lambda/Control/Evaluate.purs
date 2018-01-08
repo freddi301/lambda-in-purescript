@@ -51,7 +51,9 @@ reifyEvaluateLazySingleStep term = case term of
 -- | https://en.wikipedia.org/wiki/Symbolic_execution
 reifyEvaluateSymbolic :: ∀ reference decoration . Eq reference =>
   Int -> Ast reference decoration -> Ast reference decoration
-reifyEvaluateSymbolic nextSymbol term = let rec = reifyEvaluateSymbolic in case term of
+reifyEvaluateSymbolic nextSymbol ast =
+  let rec = reifyEvaluateSymbolic in
+  let term = ηConversion ast in case term of
   Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> rec nextSymbol $ reify head right body
   Application (Abstraction head body _) right _ -> rec nextSymbol $ reify head right body
   Application (Reference _ _) (Reference _ _) _ -> term
@@ -86,3 +88,8 @@ collectFreeReferences { free, scope, term } = case term of
   Abstraction head body _ -> collectFreeReferences { free, scope: Set.insert head scope, term: body }
 
 -- instance showSetReference :: (Show reference) => Show (Set.Set reference) where show = show <<< Foldable.foldr (Array.cons) []
+
+ηConversion :: ∀ reference decoration . Eq reference =>
+  Ast reference decoration -> Ast reference decoration
+ηConversion (Abstraction head (Application body (Reference ref _) _) _) | head == ref = body
+ηConversion ast = ast

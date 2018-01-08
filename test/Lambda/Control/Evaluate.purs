@@ -1,7 +1,7 @@
 module Test.Lambda.Control.Evaluate where
 
 import Data.Set as Set
-import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluateEager, reifyEvaluateEagerSingleStep, reifyEvaluateLazy, reifyEvaluateLazySingleStep, reifyEvaluateSymbolic)
+import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluateEager, reifyEvaluateEagerSingleStep, reifyEvaluateLazy, reifyEvaluateLazySingleStep, reifyEvaluateSymbolic, ηConversion)
 import Lambda.Data.Ast (Ast(..), (!), (\))
 import Lambda.Parser.Parser (parseProgram)
 import Prelude (Unit, unit, discard, (>>>))
@@ -173,8 +173,8 @@ test = describe "Evaluate" do
           re (identity) `shouldEqual` identity
         let idenityInIdentity = "y" \ identity ! "y"
         it "works for idenityIdentity" do
-          re (idenityInIdentity) `shouldEqual` ("y" \ "y")
-          re ("y" \ ("x" \ "x") ! "y") `shouldEqual` ("y" \ "y")
+          re (idenityInIdentity) `shouldEqual` ("x" \ "x")
+          re ("y" \ ("x" \ "x") ! "y") `shouldEqual` ("x" \ "x")
           re ("x" \ ("x" \ "x") ! "x") `shouldEqual` ("x" \ "x")
         it "works for x => y => (x => x) x" do
           re ("x" \ "y" \ (("x" \ "x") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
@@ -183,19 +183,20 @@ test = describe "Evaluate" do
         it "works for x => y => (z => z) x" do
           re ("x" \ "y" \ (("z" \ "z") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
         it "works for x => y => (x => x) y" do
-          re ("x" \ "y" \ (("x" \ "x") ! "y")) `shouldEqual` ("x" \ "y" \ "y")
+          re ("x" \ "y" \ (("x" \ "x") ! "y")) `shouldEqual` ("x" \ "x" \ "x")
         it "works for x => y => (y => x) y" do
           re ("x" \ "y" \ (("y" \ "y") ! "y")) `shouldEqual` ("x" \ "y" \ "y")
         it "works for x => y => (z => z) y" do
-          re ("x" \ "y" \ (("z" \ "z") ! "y")) `shouldEqual` ("x" \ "y" \ "y")
+          re ("x" \ "y" \ (("z" \ "z") ! "y")) `shouldEqual` ("x" \ "z" \ "z")
         it "works for x => y => x ((z => z) y)" do
           re ("x" \ "y" \ ("x" ! (("z" \ "z") ! "y"))) `shouldEqual` ("x" \ "y" \ ("x" ! "y"))
         it "works for x => y => x (z => z) y" do
-          re ("x" \ "y" \ (("x" ! ("z" \ "z")) ! "y")) `shouldEqual` ("x" \ "y" \ (("x" ! ("z" \ "z")) ! "y"))
+          re ("x" \ "y" \ (("x" ! ("z" \ "z")) ! "y")) `shouldEqual` ("x" \ (("x" ! ("z" \ "z"))))
         it "works for x => y => x ((z => w => z) y)" do
           re ("x" \ "y" \ ("x" ! (("z" \ "w" \ "z") ! "y"))) `shouldEqual` ("x" \ "y" \ ("x" ! ("w" \ "y")))
-        -- it "works for x => f x" do -- | TODO: η-conversion
-        --   re ("x" \ "f" ! "x") `shouldEqual` (Reference "f" unit)
+        it "ηConversion works for x => f x" do
+          re ("x" \ ("f" ! "x")) `shouldEqual` (Reference "f" unit)
+          ηConversion ("x" \ ("f" ! "x")) `shouldEqual` (Reference "f" unit)
       describe "program checks" do
         it "works for symbolic execution from sub-block" do
           shouldEqual ((parseProgram >>> re) "main x y = a x\n  a z = z") ("x" \ "y" \ "x")

@@ -39,7 +39,7 @@ but a worker could get a task from eager before all from lazy are executed based
 
 - resolve some non terminating samples
 
-- analyze program for code duplication (n-conversion + α-conversion)
+- analyze program for code duplication (η-conversion + α-conversion)
 
 - check for undeclared variables
 
@@ -50,8 +50,6 @@ but a worker could get a task from eager before all from lazy are executed based
 - hoisting and mutually recursive function
 
 - memoization
-
-- inference
 
 - single step evaluation (missing for symbolic)
 
@@ -96,8 +94,6 @@ but a worker could get a task from eager before all from lazy are executed based
 - bundling for browser and node with npm and bower
 
 - finish tests
-
-- implement η-conversion
 
 - η-conversion + α-conversion + α-equivalence can be used to validate laws (example comonad laws)
 
