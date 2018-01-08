@@ -65,12 +65,12 @@ derive instance eqNamed :: Eq Named
 instance showNamed :: Show Named where show (Named name ast) = name <> " = " <> show ast
 
 -- | α-conversion for α-equivalence
-mangleReferences ::
+αConversion ::
   ∀ reference decoration .
   Eq reference =>
   { ast :: Ast reference decoration, map :: Map.Map Int reference, symbol :: Int } ->
   { ast :: Ast Int decoration, map :: Map.Map Int reference, symbol :: Int }
-mangleReferences { ast, map, symbol } = unwrapAst $ rec { ast: liftedAst, map, symbol } where
+αConversion { ast, map, symbol } = unwrapAst $ rec { ast: liftedAst, map, symbol } where
   liftedAst = mapReference Unmangled ast
   -- TODO: care for free references
   rec { ast, map, symbol } = case ast of

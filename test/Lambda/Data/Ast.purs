@@ -27,8 +27,8 @@ test = describe "Ast" do
       let true_ = "x" \ "y" \ "x"
       let false_ = "x" \ "y" \ "y"
       (true_ == false_) `shouldEqual` false
-  describe "mangleReferences" do
-    let f = \ast -> (mangleReferences { ast, map: Map.empty, symbol: 0 }).ast
+  describe "αConversion" do
+    let f = \ast -> (αConversion { ast, map: Map.empty, symbol: 0 }).ast
     describe "gives comparable results for:" do
       it "x => x and y => y" do
         (f ("x" \ "x")) `shouldEqual` (f ("y" \ "y"))

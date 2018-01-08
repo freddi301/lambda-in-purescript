@@ -39,7 +39,7 @@ but a worker could get a task from eager before all from lazy are executed based
 
 - resolve some non terminating samples
 
-- analyze program for code duplication (n-conversion + mangled references)
+- analyze program for code duplication (n-conversion + α-conversion)
 
 - check for undeclared variables
 
@@ -97,7 +97,7 @@ but a worker could get a task from eager before all from lazy are executed based
 
 - finish tests
 
-- implement η-conversion (eta-conversion)
+- implement η-conversion
 
 - η-conversion + α-conversion + α-equivalence can be used to validate laws (example comonad laws)
 
