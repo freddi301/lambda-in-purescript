@@ -9,7 +9,7 @@ It supports 3 evaluation types:
   - cons: unpredictable performance
 
 - EAGER:
-  - pro: good for debugging, can indicate when execute
+  - pro: good for debugging, predictable
   - cons: some unused arguments could be evaluated
 
 - SYMBOLIC:
@@ -20,7 +20,7 @@ It supports 3 evaluation types:
 
 a naive implementation of and execution broker could be 3 queues
 lazy, eager, symbolic, where the evaluations will be partitioned
-naively the all the jobs from lazy would be executed before proceeding to eager and so on
+naively the all the jobs from lazy would be executed before proceeding to eager and then lazy
 but a worker could get a task from eager before all from lazy are executed based on data locality (aka cost)
 
 ## TODO
@@ -114,3 +114,9 @@ but a worker could get a task from eager before all from lazy are executed based
 - compiler ANF backaend llvm?
 
 - rust-wasm interpreter
+
+- extract type from expression with free variables
+
+- implement beta-abstraction (for free variables binding)
+
+- eta-abstraction (maybe useful for type restrictions) 
