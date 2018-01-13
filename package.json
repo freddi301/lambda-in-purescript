@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.0.1",
   "name": "lambda-in-purescript",
   "scripts": {
     "run": "npm run copy:syntax && pulp run",
@@ -9,12 +9,13 @@
     "docs": "pulp docs",
     "precommit": "npm test",
     "postinstall": "bower install",
-    "copy:syntax": "cp -u src/Lambda/Parser/syntax.ne output/Lambda.Parser.Parser/syntax.ne",
-    "language-support:update-local": "cp -ru src/lambda-in-purescript $HOME/.vscode/extensions/lambda-in-purescript"
+    "prepublish": "npm run build",
+    "copy:syntax": "cp -u src/Lambda/Parser/syntax.ne output/Lambda.Parser.Parser/syntax.ne"
   },
   "dependencies": {
     "nearley-make": "^1.0.1"
   },
+  "files": ["output"],
   "devDependencies": {
     "bower": "^1.8.2",
     "husky": "^0.14.3",

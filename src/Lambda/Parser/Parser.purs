@@ -2,7 +2,7 @@ module Lambda.Parser.Parser where
 
 import Prelude
 
-import Data.Array (filter, head, snoc, tail)
+import Data.Array (filter, foldl, head, snoc, tail)
 import Data.Foldable (find, foldl)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String (trim, length)
@@ -57,3 +57,11 @@ blocksToAst upper blocks = subIfAbstraction upper where
 -- | TODO: keep source info
 parseProgram :: String -> Ast String Unit
 parseProgram = parseBlocks >>> blocksToAst (Reference "main" unit)
+
+-- | TODO: test
+prettyPrint :: String -> Array Block -> String
+prettyPrint indentation blocks = foldl foldBlocks "" blocks where
+  foldBlocks acc (Block line sublines) = acc <> (trim line) <> "\n" <> prettyPrint "  " sublines
+
+prettify :: String -> String
+prettify = parseBlocks >>> prettyPrint ""
