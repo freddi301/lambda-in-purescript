@@ -1,11 +1,15 @@
 {
-  "name": "purescript-lambda",
+  "name": "lambda-in-purescript",
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
     "output"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freddi301/lambda-in-purescript.git"
+  },
   "dependencies": {
     "purescript-prelude": "^3.1.1",
     "purescript-console": "^3.0.0",
@@ -14,5 +18,6 @@
   "devDependencies": {
     "purescript-psci-support": "^3.0.0",
     "purescript-spec": "^2.0.0"
-  }
+  },
+  "license": "MIT"
 }
