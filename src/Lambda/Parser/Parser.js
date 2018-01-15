@@ -5,7 +5,7 @@ const path = require("path");
 const nearleyMake = require("nearley-make");
 
 const grammar = fs.readFileSync(path.join(__dirname, "syntax.ne"), "utf-8");
-const Ast = require("Lambda.Data.Ast");
+const Ast = require("../Lambda.Data.Ast");
 
 
 exports.parse = function parse(text) {
