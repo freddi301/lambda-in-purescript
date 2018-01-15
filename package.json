@@ -16,7 +16,9 @@
     "nearley-make": "^1.0.1"
   },
   "files": [
-    "output"
+    "output",
+    "src",
+    "bower.json"
   ],
   "devDependencies": {
     "bower": "^1.8.2",
