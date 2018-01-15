@@ -4,14 +4,14 @@ import Data.Map as Map
 import Data.Maybe as Maybe
 import Lambda.Control.Infere (Constraint(..), infere)
 import Lambda.Data.Ast ((\))
-import Prelude (Unit, const, discard, ($), (>>=))
+import Prelude (Unit, const, discard, ($), (<$>), (>>=))
 import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "infere" do
-  let inf ast = infere { ast, nextType: 0, typScope: Map.empty, constraints: Map.empty }
+  let inf ast = infere { ast: (const {}) <$> ast, nextType: 0, typScope: Map.empty, constraints: Map.empty }
   let testit ast typ constraints = let result = inf ast in (shouldEqual result.typ typ) >>= const (shouldEqual result.constraints constraints)
   it "x => x is 0 = 1 -> 1" do
     let result = inf ("x" \ "x")

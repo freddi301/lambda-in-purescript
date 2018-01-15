@@ -6,29 +6,30 @@ import Data.Maybe as Maybe
 import Data.Ord as Ord
 import Lambda.Data.Ast (Ast(..))
 import Prelude (class Eq, class Show, show, (+), (<>))
+import Data.Record (unionMerge)
 
 infere :: forall reference decoration . Ord.Ord reference =>
-  { ast :: Ast reference decoration, nextType :: Int, typScope :: Map.Map reference Int, constraints :: Constraints } ->
-  { typ :: Int, nextType :: Int, constraints :: Constraints }
+  { ast :: Ast reference { | decoration }, nextType :: Int, typScope :: Map.Map reference Int, constraints :: Constraints } ->
+  { typ :: Int, nextType :: Int, constraints :: Constraints, ast :: Ast reference { typ :: Int | decoration } }
 infere { ast, nextType, typScope, constraints } = case ast of
-  Reference name _ -> case Map.lookup name typScope of
-    Maybe.Just typ -> { typ, nextType, constraints }
-    Maybe.Nothing -> { typ: nextType, nextType: nextType + 1, constraints } -- | TODO: manage free variable case (pass arround typScope?)
-  Abstraction head body _ ->
+  Reference name decoration -> case Map.lookup name typScope of
+    Maybe.Just typ -> { typ, nextType, constraints, ast: Reference name (unionMerge decoration { typ }) }
+    Maybe.Nothing -> { typ: nextType, nextType: nextType + 1, constraints, ast: Reference name (unionMerge decoration { typ: nextType }) } -- | TODO: manage free variable case (pass arround typScope?)
+  Abstraction head body decoration ->
     let thisAbsType = nextType in
     let thisAbsHeadType = nextType + 1 in
     let inferred = infere { ast: body, nextType: nextType + 2, typScope: Map.insert head thisAbsHeadType typScope, constraints } in
     let newConstraints = addConstraint thisAbsType (IsAbstraction thisAbsHeadType inferred.typ) inferred.constraints in
-    { typ: thisAbsType, nextType: inferred.nextType, constraints: newConstraints }
+    { typ: thisAbsType, nextType: inferred.nextType, constraints: newConstraints, ast: Abstraction head inferred.ast (unionMerge decoration { typ: thisAbsType }) }
   Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->
     let inferred = infere { ast: right, nextType, typScope, constraints } in
     let newTypeScope = Map.insert leftHead inferred.typ typScope in
     infere { ast: leftBody, nextType: inferred.nextType, constraints: inferred.constraints, typScope: newTypeScope }
-  Application left right _ -> 
+  Application left right decoration -> 
     let inferredRigth = infere { ast: right, nextType, typScope, constraints } in
     let inferredLeft = infere { ast: left, nextType: inferredRigth.nextType + 1, typScope, constraints: inferredRigth.constraints } in
     let newConstraints = addConstraint inferredLeft.typ (IsAbstraction inferredRigth.typ inferredRigth.nextType) inferredLeft.constraints in
-    { typ: inferredRigth.nextType, nextType: inferredLeft.nextType, constraints: newConstraints }
+    { typ: inferredRigth.nextType, nextType: inferredLeft.nextType, constraints: newConstraints, ast: Application inferredLeft.ast inferredRigth.ast (unionMerge decoration { typ: inferredRigth.nextType }) }
 
 -- | TODO: emit decorated ast
 -- | TODO: add typechecking (trace)
