@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.1.0",
   "name": "lambda-in-purescript",
   "scripts": {
     "run": "npm run copy:syntax && pulp run",
@@ -15,7 +15,9 @@
   "dependencies": {
     "nearley-make": "^1.0.1"
   },
-  "files": ["output"],
+  "files": [
+    "output"
+  ],
   "devDependencies": {
     "bower": "^1.8.2",
     "husky": "^0.14.3",
