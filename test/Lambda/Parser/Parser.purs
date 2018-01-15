@@ -1,7 +1,7 @@
 module Test.Lambda.Parser.Parser where
 
 import Lambda.Data.Ast (ref, (\), (!), Named(..))
-import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parse, parseBlocks, parseIndent, parseProgram)
+import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parse, parseBlocks, parseIndent, parseProgram, prettify)
 import Prelude (Unit, discard, ($))
 import Test.Lambda.Sources.Booleanic (booleanic)
 import Test.Spec (Spec, describe, it)
@@ -65,4 +65,18 @@ c
   describe "parseProgram" do
     it "works for booleanic" do
       shouldEqual (parseProgram booleanic) (parseProgram booleanic)
+  describe "prettify" do
+    let program = """firstline = 1
+secondline
+  urca = haha ha
+    eureka
+  lol
+    lol = niu
+"""
+    it "left untouched a pretty source" do
+      (prettify program) `shouldEqual` program
+    let uglyLine = "a   =  b c c   x   "
+    let prettyLine = "a = b c c x\n"
+    it "prettify line" do
+      (prettify uglyLine) `shouldEqual` prettyLine
 

@@ -6,8 +6,8 @@ import Data.Array (filter, foldl, head, snoc, tail)
 import Data.Foldable (find, foldl)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String (trim, length)
-import Data.String.Regex (match, split)
-import Data.String.Regex.Flags (noFlags)
+import Data.String.Regex (match, replace, split)
+import Data.String.Regex.Flags (global, noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Lambda.Data.Ast (Ast(..), Named(..))
 
@@ -58,10 +58,11 @@ blocksToAst upper blocks = subIfAbstraction upper where
 parseProgram :: String -> Ast String Unit
 parseProgram = parseBlocks >>> blocksToAst (Reference "main" unit)
 
--- | TODO: test
+-- | TODO: do it better
 prettyPrint :: String -> Array Block -> String
 prettyPrint indentation blocks = foldl foldBlocks "" blocks where
-  foldBlocks acc (Block line sublines) = acc <> (trim line) <> "\n" <> prettyPrint "  " sublines
+  foldBlocks acc (Block line sublines) = acc <> indentation <> (trim >>> prettyLine $ line) <> "\n" <> prettyPrint (indentation <> "  ") sublines
+  prettyLine = replace (unsafeRegex "\\s+" global) (" ")
 
 prettify :: String -> String
 prettify = parseBlocks >>> prettyPrint ""
