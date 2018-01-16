@@ -32,7 +32,7 @@ test = describe "Ast" do
     describe "gives comparable results for:" do
       it "x => x and y => y" do
         (f ("x" \ "x")) `shouldEqual` (f ("y" \ "y"))
-        (f ("x" \ "x")) `shouldEqual` (Abstraction 0 (Reference 0 unit) unit)
+        (f ("x" \ "x")) `shouldEqual` (Abstraction 0 (Reference 0 unit) unit unit)
       it "a => b => a and c => d => c" do
         (f ("a" \ "b" \ "a")) `shouldEqual` (f ("c" \ "d" \ "c"))
-        (f ("a" \ "b" \ "a")) `shouldEqual` (Abstraction 0 (Abstraction 1 (Reference 0 unit) unit) unit)
+        (f ("a" \ "b" \ "a")) `shouldEqual` (Abstraction 0 (Abstraction 1 (Reference 0 unit) unit unit) unit unit)

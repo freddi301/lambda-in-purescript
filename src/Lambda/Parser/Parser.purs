@@ -49,9 +49,9 @@ parseBlocks = splitLines >>> parseIndentation >>> filterEmpty >>> toBlocks where
 blocksToAst :: Ast String Unit -> Array Block -> Ast String Unit
 blocksToAst upper blocks = subIfAbstraction upper where
   foldAll innermost = foldl reduce innermost (map parseRec blocks)
-  reduce body (Named name term) = Application (Abstraction name body unit) term unit
+  reduce body (Named name term) = Application (Abstraction name body unit unit) term unit
   parseRec (Block text nested) = case parse text of (Named name body) -> (Named name (blocksToAst body nested))
-  subIfAbstraction (Abstraction head body unit) = Abstraction head (subIfAbstraction body) unit
+  subIfAbstraction (Abstraction head body _ _) = Abstraction head (subIfAbstraction body) unit unit
   subIfAbstraction term = foldAll term
 
 -- | TODO: keep source info

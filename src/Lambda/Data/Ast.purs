@@ -10,34 +10,34 @@ import Data.Map as Map
 data Ast reference decoration
   = Reference reference decoration
   | Application (Ast reference decoration) (Ast reference decoration) decoration
-  | Abstraction reference (Ast reference decoration) decoration
+  | Abstraction reference (Ast reference decoration) decoration decoration
 
 -- | `Functor` instance for decoration part
 instance functorAst :: Functor (Ast reference) where
   map f (Reference name d) = Reference name (f d)
   map f (Application left right d) = Application (map f left) (map f right) (f d)
-  map f (Abstraction head body d) = Abstraction head (map f body) (f d)
+  map f (Abstraction head body hd d) = Abstraction head (map f body) (f hd) (f d)
 
 -- | `Functor.map` implementation for reference part
 mapReference :: ∀ reference toReference decoration .
   (reference -> toReference) -> Ast reference decoration -> Ast toReference decoration
 mapReference f (Reference name decoration) = Reference (f name) decoration
 mapReference f (Application left right decoration) = Application (mapReference f left) (mapReference f right) decoration
-mapReference f (Abstraction head body decoration) = Abstraction (f head) (mapReference f body) decoration
+mapReference f (Abstraction head body headDecoration decoration) = Abstraction (f head) (mapReference f body) headDecoration decoration
 
 instance showAst :: (Show reference, Show decoration) => Show (Ast reference decoration) where
   show (Reference name decoration) = show name
   show (Application left right decoration) = "(" <> show left <> " " <> show right <> ")"
-  show (Abstraction head body decoration) = "(" <> show head <> " => " <> show body <> ")"
+  show (Abstraction head body headDecoration decoration) = "(" <> show head <> " => " <> show body <> ")"
 
 prettyPrint :: Ast String Unit -> String
 prettyPrint (Reference name _) = name
 prettyPrint (Application (Application leftLeft leftRight _) right _) = "(" <> prettyPrint leftLeft <> " " <> prettyPrint leftRight <> " " <> prettyPrint right <> ")"
 prettyPrint (Application left right _) = "(" <> prettyPrint left <> " " <> prettyPrint right <> ")"
-prettyPrint (Abstraction head (Abstraction headRight bodyRight _) _) = "(" <> head <> " => " <> headRight <> " => " <> prettyPrint bodyRight <> ")"
-prettyPrint (Abstraction head body@(Application _ _ _) _) = "(" <> head <> " => " <> removeParens (prettyPrint body) <> ")" where
+prettyPrint (Abstraction head (Abstraction headRight bodyRight _ _) _ _) = "(" <> head <> " => " <> headRight <> " => " <> prettyPrint bodyRight <> ")"
+prettyPrint (Abstraction head body@(Application _ _ _) _ _) = "(" <> head <> " => " <> removeParens (prettyPrint body) <> ")" where
   removeParens string = (take ((length string) - 2)) (drop 1 string) 
-prettyPrint (Abstraction head body _) = "(" <> head <> " => " <> prettyPrint body <> ")"
+prettyPrint (Abstraction head body _ _) = "(" <> head <> " => " <> prettyPrint body <> ")"
 
 -- | operators for friendlier construction of the ast
 -- | λx.x x
@@ -57,7 +57,7 @@ ref name = Reference name unit
 app :: Ast String Unit -> Ast String Unit -> Ast String Unit
 app left right = Application left right unit
 abs :: String -> Ast String Unit -> Ast String Unit
-abs head body = Abstraction head body unit
+abs head body = Abstraction head body unit unit
 derive instance eqAst :: (Eq reference, Eq decoration) => Eq (Ast reference decoration)
 
 data Named = Named String (Ast String Unit)
@@ -85,14 +85,14 @@ instance showNamed :: Show Named where show (Named name ast) = name <> " = " <> 
       let rightResult = rec { ast: right, map: leftResult.map, symbol: leftResult.symbol } in
       let resultAst = Application leftResult.ast rightResult.ast decoration in
       { ast: resultAst, map: rightResult.map, symbol: rightResult.symbol }
-    (Abstraction (Mangled head) body decoration) -> { ast, map, symbol }
-    (Abstraction (Unmangled head) body decoration) ->
+    (Abstraction (Mangled head) body headDecoration decoration) -> { ast, map, symbol }
+    (Abstraction (Unmangled head) body headDecoration decoration) ->
       let nextMap = Map.insert symbol head map in
       let nextSymbol = symbol + 1 in
       let resultHead = Mangled symbol in
       let reifiedBody = replaceReference (Unmangled head) resultHead body in
       let bodyResult = rec { ast: reifiedBody, map: nextMap, symbol: nextSymbol } in
-      let resultAst = Abstraction resultHead bodyResult.ast decoration in
+      let resultAst = Abstraction resultHead bodyResult.ast headDecoration decoration in
       { ast: resultAst, map: bodyResult.map, symbol: bodyResult.symbol }
   unwrapAst { ast, map, symbol } = { ast: mapReference unwrap ast, map, symbol }
   unwrap (Mangled symbol) = symbol
@@ -104,5 +104,5 @@ derive instance eqMangled :: (Eq reference, Eq symbol) => Eq (Mangled reference 
 replaceReference :: ∀ reference decoration . Eq reference => reference -> reference -> Ast reference decoration -> Ast reference decoration
 replaceReference ref value term = case term of
   Reference name decoration -> if ref == name then (Reference value decoration) else term
-  Abstraction head body decoration -> if ref == head then term else Abstraction head (replaceReference ref value body) decoration
+  Abstraction head body headDecoration decoration -> if ref == head then term else Abstraction head (replaceReference ref value body) headDecoration decoration
   Application left right decoration -> Application (replaceReference ref value left) (replaceReference ref value right) decoration

@@ -15,13 +15,13 @@ infere { ast, nextType, typScope, constraints } = case ast of
   Reference name decoration -> case Map.lookup name typScope of
     Maybe.Just typ -> { typ, nextType, constraints, ast: Reference name (unionMerge decoration { typ }) }
     Maybe.Nothing -> { typ: nextType, nextType: nextType + 1, constraints, ast: Reference name (unionMerge decoration { typ: nextType }) } -- | TODO: manage free variable case (pass arround typScope?)
-  Abstraction head body decoration ->
+  Abstraction head body headDecoration decoration ->
     let thisAbsType = nextType in
     let thisAbsHeadType = nextType + 1 in
     let inferred = infere { ast: body, nextType: nextType + 2, typScope: Map.insert head thisAbsHeadType typScope, constraints } in
     let newConstraints = addConstraint thisAbsType (IsAbstraction thisAbsHeadType inferred.typ) inferred.constraints in
-    { typ: thisAbsType, nextType: inferred.nextType, constraints: newConstraints, ast: Abstraction head inferred.ast (unionMerge decoration { typ: thisAbsType }) }
-  Application (Abstraction leftHead leftBody _) right@(Abstraction _ _ _) _ ->
+    { typ: thisAbsType, nextType: inferred.nextType, constraints: newConstraints, ast: Abstraction head inferred.ast (unionMerge decoration { typ: thisAbsHeadType }) (unionMerge decoration { typ: thisAbsType }) }
+  Application (Abstraction leftHead leftBody _ _) right@(Abstraction _ _ _ _) _ ->
     let inferred = infere { ast: right, nextType, typScope, constraints } in
     let newTypeScope = Map.insert leftHead inferred.typ typScope in
     infere { ast: leftBody, nextType: inferred.nextType, constraints: inferred.constraints, typScope: newTypeScope }
