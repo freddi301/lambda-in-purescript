@@ -12,7 +12,13 @@ import Data.String.Regex.Unsafe (unsafeRegex)
 import Lambda.Data.Ast (Ast(..), Named(..))
 
 -- | TODO: keep source info
-foreign import parse :: String -> Named
+foreign import parse :: String -> Named String Position
+parseUnit :: String -> Named String Unit
+parseUnit text = (const unit) <$> (parse text)
+
+data Position = Position { file :: String, startLine :: Int, endLine :: Int, startColumn :: Int, endColumn :: Int }
+pos :: Position
+pos = Position { file: "", startLine: 0, endLine: 0, startColumn: 0, endColumn: 0 }
 
 data IndentLevel = IndentLevel Int String 
 instance showIndentLevel :: Show IndentLevel where show (IndentLevel level text) = (show level) <> " " <> text
@@ -49,8 +55,8 @@ parseBlocks = splitLines >>> parseIndentation >>> filterEmpty >>> toBlocks where
 blocksToAst :: Ast String Unit -> Array Block -> Ast String Unit
 blocksToAst upper blocks = subIfAbstraction upper where
   foldAll innermost = foldl reduce innermost (map parseRec blocks)
-  reduce body (Named name term) = Application (Abstraction name body unit unit) term unit
-  parseRec (Block text nested) = case parse text of (Named name body) -> (Named name (blocksToAst body nested))
+  reduce body (Named name _ term) = Application (Abstraction name body unit unit) term unit
+  parseRec (Block text nested) = case parseUnit text of (Named name unit body) -> (Named name unit (blocksToAst body nested))
   subIfAbstraction (Abstraction head body _ _) = Abstraction head (subIfAbstraction body) unit unit
   subIfAbstraction term = foldAll term
 

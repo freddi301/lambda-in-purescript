@@ -1,8 +1,8 @@
 module Test.Lambda.Parser.Parser where
 
 import Lambda.Data.Ast (ref, (\), (!), Named(..))
-import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parse, parseBlocks, parseIndent, parseProgram, prettify)
-import Prelude (Unit, discard, ($))
+import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
+import Prelude (Unit, discard, unit, ($))
 import Test.Lambda.Sources.Booleanic (booleanic)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -11,13 +11,13 @@ import Test.Spec.Runner (RunnerEffects)
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Parse" do
   describe "parse" do
-    let check string ast = shouldEqual (parse string) ast
+    let check string ast = shouldEqual (parseUnit string) ast
     it "works" do
-      check "hello = (hello)" $ Named "hello" (ref "hello")
-      check "ex1 = (a b)" $ Named "ex1" ("a" ! "b")
-      check "ex2 = (a b c d)" $ Named "ex2" $ "a" ! "b" ! "c" ! "d"
-      check "ex3 = (a, b, c, d)" $ Named "ex3" $ "a" ! ("b" ! ("c" ! "d"))
-      check "ex4 ab cd = (ef gh)" $ Named "ex4" ("ab" \ "cd" \ ("ef" ! "gh"))
+      check "hello = (hello)" $ Named "hello" unit (ref "hello")
+      check "ex1 = (a b)" $ Named "ex1" unit ("a" ! "b")
+      check "ex2 = (a b c d)" $ Named "ex2" unit $ "a" ! "b" ! "c" ! "d"
+      check "ex3 = (a, b, c, d)" $ Named "ex3" unit $ "a" ! ("b" ! ("c" ! "d"))
+      check "ex4 ab cd = (ef gh)" $ Named "ex4" unit ("ab" \ "cd" \ ("ef" ! "gh"))
   describe "parseIndent" do
     let check strings = shouldEqual (parseIndent strings)
     it "works" do
@@ -78,4 +78,3 @@ secondline
     let prettyLine = "a = b c c x\n"
     it "prettify line" do
       (prettify uglyLine) `shouldEqual` prettyLine
-

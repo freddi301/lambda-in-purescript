@@ -25,7 +25,7 @@ mapReference f (Reference name decoration) = Reference (f name) decoration
 mapReference f (Application left right decoration) = Application (mapReference f left) (mapReference f right) decoration
 mapReference f (Abstraction head body headDecoration decoration) = Abstraction (f head) (mapReference f body) headDecoration decoration
 
-instance showAst :: (Show reference, Show decoration) => Show (Ast reference decoration) where
+instance showAst :: Show reference => Show (Ast reference decoration) where
   show (Reference name decoration) = show name
   show (Application left right decoration) = "(" <> show left <> " " <> show right <> ")"
   show (Abstraction head body headDecoration decoration) = "(" <> show head <> " => " <> show body <> ")"
@@ -60,9 +60,12 @@ abs :: String -> Ast String Unit -> Ast String Unit
 abs head body = Abstraction head body unit unit
 derive instance eqAst :: (Eq reference, Eq decoration) => Eq (Ast reference decoration)
 
-data Named = Named String (Ast String Unit)
-derive instance eqNamed :: Eq Named
-instance showNamed :: Show Named where show (Named name ast) = name <> " = " <> show ast
+data Named reference decoration = Named reference decoration (Ast reference decoration)
+derive instance eqNamed :: (Eq reference, Eq decoration) => Eq (Named reference decoration)
+instance showNamed :: Show reference => Show (Named reference decoration) where
+  show (Named name decoration ast) = show name <> " = " <> show ast
+instance functorNamed :: Functor (Named reference) where
+  map f (Named name decoration ast) = Named name (f decoration) (f <$> ast)
 
 -- | α-conversion for α-equivalence
 αConversion ::
