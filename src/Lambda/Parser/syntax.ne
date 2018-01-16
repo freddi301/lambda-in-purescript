@@ -78,4 +78,4 @@ PAIR_LEFT ->
 | PAIR_LEFT _ PARENS {% pairLeft %}
 | PAIR_LEFT __ REFERENCE {% pairLeft %}
 
-REFERENCE -> %word {% ([reference]) => ref(reference.value)(fakePos) %}
+REFERENCE -> %word {% ([reference]) => ref(reference.value)(pos(reference.col, reference.col + reference.text.length)) %}

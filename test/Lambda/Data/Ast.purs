@@ -15,8 +15,8 @@ test = describe "Ast" do
     it "works" do
       -- shouldEqual (show ("x" \ "y" \ "x")) "unit(\"x\" => unit(\"y\" => unit\"x\"))"
       -- shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "unit(\"x\" => unit(unit(unit\"x\" unit\"x\") unit\"x\"))"
-      shouldEqual (show ("x" \ "y" \ "x")) "(\"x\" => (\"y\" => \"x\"))"
-      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(\"x\" => ((\"x\" \"x\") \"x\"))"
+      shouldEqual (show ("x" \ "y" \ "x")) "(\"x\" => (\"y\" => \"x\"[unit]))"
+      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(\"x\" => ((\"x\"[unit] \"x\"[unit]) \"x\"[unit]))"
   describe "prettyPrint" do
     it "works" do
       shouldEqual (prettyPrint ("x" \ "y" \ "x")) "(x => y => x)"

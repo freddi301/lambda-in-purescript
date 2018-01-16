@@ -25,8 +25,8 @@ mapReference f (Reference name decoration) = Reference (f name) decoration
 mapReference f (Application left right decoration) = Application (mapReference f left) (mapReference f right) decoration
 mapReference f (Abstraction head body headDecoration decoration) = Abstraction (f head) (mapReference f body) headDecoration decoration
 
-instance showAst :: Show reference => Show (Ast reference decoration) where
-  show (Reference name decoration) = show name
+instance showAst :: (Show reference, Show decoration) => Show (Ast reference decoration) where
+  show (Reference name decoration) = show name <> "[" <> show decoration <> "]"
   show (Application left right decoration) = "(" <> show left <> " " <> show right <> ")"
   show (Abstraction head body headDecoration decoration) = "(" <> show head <> " => " <> show body <> ")"
 
