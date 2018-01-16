@@ -1,6 +1,16 @@
 @builtin "whitespace.ne"
 
 @{%
+  const moo = require("moo");
+  const lexer = moo.compile({
+    ws: /[ \t]+/,
+    word: /[a-zA-Z0-9]+/,
+    punctuation:  /\(|\)|,|=/
+  });
+%}
+@lexer lexer
+
+@{%
   const Ast = require("../Lambda.Data.Ast");
   const { app, abs, ref } = Ast;
   const named = Ast.Named.create;
@@ -66,4 +76,4 @@ PAIR_LEFT ->
 
 REFERENCE -> WORD {% ([reference]) => ref(reference) %}
 
-WORD -> [^\s\n(),=]:+ {% ([chars]) => chars.join('') %}
+WORD -> %word {% ([token]) => token.text %}
