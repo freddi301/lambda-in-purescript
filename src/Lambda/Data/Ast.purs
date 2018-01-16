@@ -60,13 +60,6 @@ abs :: String -> Ast String Unit -> Ast String Unit
 abs head body = Abstraction head body unit unit
 derive instance eqAst :: (Eq reference, Eq decoration) => Eq (Ast reference decoration)
 
-data Named reference decoration = Named reference decoration (Ast reference decoration)
-derive instance eqNamed :: (Eq reference, Eq decoration) => Eq (Named reference decoration)
-instance showNamed :: Show reference => Show (Named reference decoration) where
-  show (Named name decoration ast) = show name <> " = " <> show ast
-instance functorNamed :: Functor (Named reference) where
-  map f (Named name decoration ast) = Named name (f decoration) (f <$> ast)
-
 -- | α-conversion for α-equivalence
 αConversion ::
   ∀ reference decoration .

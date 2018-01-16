@@ -6,7 +6,8 @@ import Test.Spec (Spec, describe, it)
 import Test.Spec.Runner (RunnerEffects)
 import Test.Spec.Assertions (shouldEqual)
 
-import Lambda.Data.Ast
+import Lambda.Data.Ast (Ast(..), prettyPrint, αConversion, (!), (\))
+import Lambda.Data.Parser
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Ast" do

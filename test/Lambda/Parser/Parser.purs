@@ -1,7 +1,7 @@
 module Test.Lambda.Parser.Parser where
 
-import Lambda.Data.Ast (Ast(..), Named(..), ref, (!), (\))
-import Lambda.Data.Parser (Block(..), IndentLevel(..), fakePos)
+import Lambda.Data.Ast (Ast(..), ref, (!), (\))
+import Lambda.Data.Parser (Block(..), Named(..), IndentLevel(..), fakePos)
 import Lambda.Parser.Parser (blocksToAst, parse, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
 import Prelude (Unit, discard, unit, ($))
 import Test.Lambda.Sources.Booleanic (booleanic)

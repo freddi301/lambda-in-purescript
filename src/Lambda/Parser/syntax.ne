@@ -13,7 +13,7 @@
 @{%
   const Ast = require("../Lambda.Data.Ast");
   const ParserData = require("../Lambda.Data.Parser");
-  const named = Ast.Named.create;
+  const named = ParserData.Named.create;
   const ref = Ast.Reference.create;
   const app = Ast.Application.create;
   const abs = Ast.Abstraction.create;

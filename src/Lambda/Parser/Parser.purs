@@ -9,8 +9,8 @@ import Data.String (trim, length)
 import Data.String.Regex (match, replace, split)
 import Data.String.Regex.Flags (global, noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
-import Lambda.Data.Ast (Ast(..), Named(..))
-import Lambda.Data.Parser (Block(Block), IndentLevel(IndentLevel), Position)
+import Lambda.Data.Ast (Ast(..))
+import Lambda.Data.Parser (Block(Block), IndentLevel(IndentLevel), Position, Named(..))
 
 -- | TODO: keep source info
 foreign import parse :: String -> Named String Position
