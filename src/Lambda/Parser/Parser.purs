@@ -2,7 +2,7 @@ module Lambda.Parser.Parser where
 
 import Prelude
 
-import Data.Array (filter, foldl, head, snoc, tail)
+import Data.Array (filter, head, snoc, tail)
 import Data.Foldable (find, foldl)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String (trim, length)

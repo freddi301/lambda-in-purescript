@@ -26,9 +26,6 @@ LEAF ->
 FUNCTION ->
   ARGUMENTS "=" _ BODY {% ([[name, ...args], equal, space, body]) => named(name)(args.reverse().reduce((body, head) => abs(head)(body), body)) %}
 
-INLINE_FUNCTION ->
-  ARGUMENTS "=" _ BODY {% ([[name, ...args], equal, space, body]) => args.reverse().reduce((body, head) => abs(head)(body), body) %}
-
 ARGUMENTS ->
   (WORD __):+ {% ([words, space]) => words.map(([word]) => word) %}
 
@@ -45,8 +42,7 @@ BODY ->
   const parens = ([lparens, lspace, term, rspace, rparens]) => term
 %}
 PARENS ->
-  "(" _ INLINE_FUNCTION _ ")" {% parens %}
-| "(" _ PAIR_LEFT _ ")" {% parens %}
+  "(" _ PAIR_LEFT _ ")" {% parens %}
 | "(" _ PAIR_RIGHT _ ")" {% parens %}
 | "(" _ PARENS _ ")" {% parens %}
 | "(" _ REFERENCE _ ")" {% parens %}

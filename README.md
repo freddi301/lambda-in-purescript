@@ -45,8 +45,6 @@ but a worker could get a task from eager before all from lazy are executed based
 
 - make possible recursive function by name  
 
-- make possible recursive function by name (for inline functions)
-
 - hoisting and mutually recursive function
 
 - memoization
