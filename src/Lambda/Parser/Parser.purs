@@ -10,19 +10,12 @@ import Data.String.Regex (match, replace, split)
 import Data.String.Regex.Flags (global, noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Lambda.Data.Ast (Ast(..), Named(..))
+import Lambda.Data.Parser (Block(Block), IndentLevel(IndentLevel), Position)
 
 -- | TODO: keep source info
 foreign import parse :: String -> Named String Position
 parseUnit :: String -> Named String Unit
 parseUnit text = (const unit) <$> (parse text)
-
-data Position = Position { file :: String, startLine :: Int, endLine :: Int, startColumn :: Int, endColumn :: Int }
-pos :: Position
-pos = Position { file: "", startLine: 0, endLine: 0, startColumn: 0, endColumn: 0 }
-
-data IndentLevel = IndentLevel Int String 
-instance showIndentLevel :: Show IndentLevel where show (IndentLevel level text) = (show level) <> " " <> text
-derive instance eqIndentLevel :: Eq IndentLevel
 
 -- | TODO: keep source info
 parseIndent :: String -> IndentLevel
@@ -30,10 +23,6 @@ parseIndent string =
   let token = unsafeRegex "^ *" noFlags in
   let level = fromMaybe 0 $ (match token string) >>= find isJust >>= id <#> (length >>> flip div 2) in
   IndentLevel level (trim string) -- | TODO: remove trim
-
-data Block = Block String (Array Block) 
-instance showBlock :: Show Block where show (Block line block) = show line <> " " <> show block
-derive instance eqBlock :: Eq Block
 
 -- | TODO: keep source info
 parseBlocks :: String -> Array Block

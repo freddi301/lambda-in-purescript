@@ -1,7 +1,8 @@
 module Test.Lambda.Parser.Parser where
 
 import Lambda.Data.Ast (ref, (\), (!), Named(..))
-import Lambda.Parser.Parser (Block(..), IndentLevel(..), blocksToAst, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
+import Lambda.Data.Parser (Block(..), IndentLevel(..))
+import Lambda.Parser.Parser (blocksToAst, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
 import Prelude (Unit, discard, unit, ($))
 import Test.Lambda.Sources.Booleanic (booleanic)
 import Test.Spec (Spec, describe, it)
@@ -10,7 +11,7 @@ import Test.Spec.Runner (RunnerEffects)
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Parse" do
-  describe "parse" do
+  describe "parseUnit" do
     let check string ast = shouldEqual (parseUnit string) ast
     it "works" do
       check "hello = (hello)" $ Named "hello" unit (ref "hello")

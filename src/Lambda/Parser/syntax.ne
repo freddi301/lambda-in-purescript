@@ -12,11 +12,13 @@
 
 @{%
   const Ast = require("../Lambda.Data.Ast");
+  const ParserData = require("../Lambda.Data.Parser");
   const named = Ast.Named.create;
   const ref = Ast.Reference.create;
   const app = Ast.Application.create;
   const abs = Ast.Abstraction.create;
-  const pos = Ast.pos;
+  const pos = ParserData.Position.create
+  const fakePos = ParserData.fakePos;
 %}
 
 MAIN ->
@@ -27,10 +29,10 @@ LEAF ->
 | PARENS {% ([parens]) => parens %}
 
 FUNCTION ->
-  ARGUMENTS "=" _ BODY {% ([[name, ...args], equal, space, body]) => named(name)(pos)(args.reverse().reduce((body, head) => abs(head)(body)(pos)(pos), body)) %}
+  ARGUMENTS "=" _ BODY {% ([[name, ...args], equal, space, body]) => named(name)(fakePos)(args.reverse().reduce((body, head) => abs(head)(body)(fakePos)(fakePos), body)) %}
 
 ARGUMENTS ->
-  (WORD __):+ {% ([words, space]) => words.map(([word]) => word) %}
+  (%word __):+ {% ([words, space]) => words.map(([word]) => word.value) %}
 
 @{%
   const body = ([term]) => term
@@ -51,7 +53,7 @@ PARENS ->
 | "(" _ REFERENCE _ ")" {% parens %}
 
 @{%
-  const pairRight = ([left, lspace, comma, rspace, right]) => app(left)(right)(pos)
+  const pairRight = ([left, lspace, comma, rspace, right]) => app(left)(right)(fakePos)
 %}
 PAIR_RIGHT ->
   LEAF _ "," _ LEAF {% pairRight %}
@@ -62,7 +64,7 @@ PAIR_RIGHT ->
 | PAIR_LEFT _ "," _ PAIR_RIGHT {% pairRight %}
 
 @{%
-  const pairLeft = ([left, space, right])=> app(left)(right)(pos)
+  const pairLeft = ([left, space, right]) => { return app(left)(right)(fakePos) }
 %}
 PAIR_LEFT ->
   PARENS _ PARENS {% pairLeft %}
@@ -72,6 +74,4 @@ PAIR_LEFT ->
 | PAIR_LEFT _ PARENS {% pairLeft %}
 | PAIR_LEFT __ REFERENCE {% pairLeft %}
 
-REFERENCE -> WORD {% ([reference]) => ref(reference)(pos) %}
-
-WORD -> %word {% ([token]) => token.text %}
+REFERENCE -> %word {% ([reference]) => ref(reference.value)(fakePos) %}
