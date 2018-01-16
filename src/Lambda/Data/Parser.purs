@@ -4,6 +4,7 @@ import Lambda.Data.Ast (Ast)
 import Prelude (class Eq, class Functor, class Show, show, (<$>), (<>))
 
 data Position = Position { file :: String, startLine :: Int, endLine :: Int, startColumn :: Int, endColumn :: Int }
+derive instance eqPosition :: Eq Position
 fakePos :: Position
 fakePos = Position { file: "", startLine: 0, endLine: 0, startColumn: 0, endColumn: 0 }
 

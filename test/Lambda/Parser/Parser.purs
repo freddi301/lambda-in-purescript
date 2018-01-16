@@ -1,8 +1,8 @@
 module Test.Lambda.Parser.Parser where
 
-import Lambda.Data.Ast (ref, (\), (!), Named(..))
-import Lambda.Data.Parser (Block(..), IndentLevel(..))
-import Lambda.Parser.Parser (blocksToAst, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
+import Lambda.Data.Ast (Ast(..), Named(..), ref, (!), (\))
+import Lambda.Data.Parser (Block(..), IndentLevel(..), fakePos)
+import Lambda.Parser.Parser (blocksToAst, parse, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
 import Prelude (Unit, discard, unit, ($))
 import Test.Lambda.Sources.Booleanic (booleanic)
 import Test.Spec (Spec, describe, it)
@@ -79,3 +79,11 @@ secondline
     let prettyLine = "a = b c c x\n"
     it "prettify line" do
       (prettify uglyLine) `shouldEqual` prettyLine
+  describe "parse" do
+    let check string ast = shouldEqual (parse string) ast
+    it "works" do
+      check "hello = (hello)" $ Named "hello" fakePos (Reference "hello" fakePos)
+      check "ex1 = (a b)" $ Named "ex1" fakePos (Application (Reference "a" fakePos) (Reference "b" fakePos) fakePos)
+      check "ex2 = (a b c )" $ Named "ex2" fakePos (Application (Application (Reference "a" fakePos) (Reference "b" fakePos) fakePos) (Reference "c" fakePos) fakePos)
+      check "ex3 = (a, b, c)" $ Named "ex3" fakePos (Application (Reference "a" fakePos) (Application (Reference "b" fakePos) (Reference "c" fakePos) fakePos) fakePos)
+      check "ex4 ab cd = ef" $ Named "ex4" fakePos (Abstraction "ab" (Abstraction "cd" (Reference "ef" fakePos) fakePos fakePos) fakePos fakePos)

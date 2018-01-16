@@ -17,7 +17,11 @@
   const ref = Ast.Reference.create;
   const app = Ast.Application.create;
   const abs = Ast.Abstraction.create;
-  const pos = ParserData.Position.create
+  const pos = (start, end) => ParserData.Position.create({
+    file: "",
+    startLine: 0, endLine: 0,
+    startColumn: start, endColumn: end
+  });
   const fakePos = ParserData.fakePos;
 %}
 
