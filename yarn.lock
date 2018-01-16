@@ -1155,6 +1155,10 @@ module-deps@^4.0.8:
     through2 "^2.0.0"
     xtend "^4.0.0"
 
+moo@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/moo/-/moo-0.4.3.tgz#3f847a26f31cf625a956a87f2b10fbc013bfd10e"
+
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
@@ -1167,13 +1171,7 @@ nan@^2.3.0:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.7.0.tgz#d95bf721ec877e08db276ed3fc6eb78f9083ad46"
 
-nearley-make@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/nearley-make/-/nearley-make-1.0.1.tgz#28ac3803b7f547cbdaaea4cb8c0fd6b0ada5df27"
-  dependencies:
-    nearley "^2.6.0"
-
-nearley@^2.6.0:
+nearley@^2.11.0:
   version "2.11.0"
   resolved "https://registry.yarnpkg.com/nearley/-/nearley-2.11.0.tgz#5e626c79a6cd2f6ab9e7e5d5805e7668967757ae"
   dependencies:

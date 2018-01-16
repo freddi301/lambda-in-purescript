@@ -10,10 +10,11 @@
     "precommit": "npm test",
     "postinstall": "bower install",
     "prepublish": "npm run build",
-    "copy:syntax": "cp -u src/Lambda/Parser/syntax.ne output/Lambda.Parser.Parser/syntax.ne"
+    "copy:syntax": "nearleyc src/Lambda/Parser/syntax.ne -o output/Lambda.Parser.Parser/grammar.js"
   },
   "dependencies": {
-    "nearley-make": "^1.0.1"
+    "moo": "^0.4.3",
+    "nearley": "^2.11.0"
   },
   "files": [
     "output",

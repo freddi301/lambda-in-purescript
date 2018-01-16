@@ -1,5 +1,11 @@
 @builtin "whitespace.ne"
 
+@{%
+  const Ast = require("../Lambda.Data.Ast");
+  const { app, abs, ref } = Ast;
+  const named = Ast.Named.create;
+%}
+
 MAIN ->
   _ FUNCTION _ {% ([lspace, fun, rspace]) => fun %}
 
