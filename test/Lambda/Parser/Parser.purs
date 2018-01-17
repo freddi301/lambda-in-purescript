@@ -3,7 +3,7 @@ module Test.Lambda.Parser.Parser where
 import Lambda.Data.Ast (Ast(..), ref, (!), (\))
 import Lambda.Data.Parser (Block(..), IndentLevel(..), Named(..), Position(..), fakePos)
 import Lambda.Parser.Parser (blocksToAst, parse, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
-import Prelude (Unit, discard, unit, ($))
+import Prelude (Unit, const, discard, unit, ($), (<$>))
 import Test.Lambda.Sources.Booleanic (booleanic)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
@@ -23,9 +23,9 @@ test = describe "Parse" do
     let check strings = shouldEqual (parseIndent strings)
     it "works" do
       check "a" (IndentLevel 0 "a")
-      check "  b" (IndentLevel 1 "b")
-      check "    c" (IndentLevel 2 "c")
-      check "      d" (IndentLevel 3 "d")
+      check "  b" (IndentLevel 1 "  b")
+      check "    c" (IndentLevel 2 "    c")
+      check "      d" (IndentLevel 3 "      d")
   describe "parseBlocks" do
     let check string structure = shouldEqual (parseBlocks string) structure
     it "works" do
@@ -42,18 +42,18 @@ c
     f
   g""" [
       Block "a" [
-        Block "b" []
+        Block "  b" []
       ],
       Block "c" [
-        Block "d" [],
-        Block "e" [
-          Block "f" []
+        Block "  d" [],
+        Block "  e" [
+          Block "    f" []
         ],
-        Block "g" []
+        Block "  g" []
       ]
     ]
   describe "blocksToAst" do
-    let check string ast = shouldEqual (blocksToAst (ref "main") (parseBlocks string)) ast
+    let check string ast = shouldEqual ((const unit) <$> (blocksToAst (Reference "main" fakePos) (parseBlocks string))) ast
     it "works" do
       check "main = a" $ (("main" \ "main") ! "a")
       check "main = a a" $ (("main" \ "main") ! ("a" ! "a"))
@@ -82,7 +82,7 @@ secondline
   describe "parse" do
     let check string ast = shouldEqual (parse string) ast
     let pos start end = Position { file: "", startLine: 0, endLine: 0, startColumn: start, endColumn: end }
-    it "works" do
+    it "works" do 
       check "hello = (hello)" $ Named "hello" (pos 0 5) (Reference "hello" (pos 9 14))
       check "ex1 = a b" $ Named "ex1" (pos 0 3) (Application (Reference "a" (pos 6 7)) (Reference "b" (pos 8 9)) (pos 6 9))
       check "ex2 = (a b c )" $ Named "ex2" (pos 0 3) (Application (Application (Reference "a" (pos 7 8)) (Reference "b" (pos 9 10)) (pos 7 10)) (Reference "c" (pos 11 12)) (pos 7 12))

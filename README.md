@@ -35,29 +35,21 @@ but a worker could get a task from eager before all from lazy are executed based
 
 - source maps
 
-- syntax highlight (partially implemented as vscode language support)
-
 - resolve some non terminating samples
 
 - analyze program for code duplication (η-conversion + α-conversion)
 
 - check for undeclared variables
 
-- make possible recursive function by name  
-
-- hoisting and mutually recursive function
+- hoisting and mutually recursive functions
 
 - memoization
-
-- single step evaluation (missing for symbolic)
 
 - infix operators
 
 - autocompletion
 
 - wrap syntax errors
-
-- prettify
 
 - atoms
 

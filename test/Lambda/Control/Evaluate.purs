@@ -3,7 +3,7 @@ module Test.Lambda.Control.Evaluate where
 import Data.Set as Set
 import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluateEager, reifyEvaluateEagerSingleStep, reifyEvaluateLazy, reifyEvaluateLazySingleStep, reifyEvaluateSymbolic, ηConversion)
 import Lambda.Data.Ast (Ast(..), (!), (\))
-import Lambda.Parser.Parser (parseProgram)
+import Lambda.Parser.Parser (parseProgramUnit)
 import Prelude (Unit, unit, discard, (>>>))
 import Test.Lambda.Sources.Booleanic (booleanic, booleanicMCSE)
 import Test.Spec (Spec, describe, it, pending)
@@ -199,9 +199,9 @@ test = describe "Evaluate" do
           ηConversion ("x" \ ("f" ! "x")) `shouldEqual` (Reference "f" unit)
       describe "program checks" do
         it "works for symbolic execution from sub-block" do
-          shouldEqual ((parseProgram >>> re) "main x y = a x\n  a z = z") ("x" \ "y" \ "x")
+          shouldEqual ((parseProgramUnit >>> re) "main x y = a x\n  a z = z") ("x" \ "y" \ "x")
         it "works for booleanic" do
-          shouldEqual ((parseProgram >>> re) booleanic) ("a" \ "b" \ "a")
-          shouldEqual ((parseProgram >>> re) booleanicMCSE) ("a" \ "b" \ "a")
+          shouldEqual ((parseProgramUnit >>> re) booleanic) ("a" \ "b" \ "a")
+          shouldEqual ((parseProgramUnit >>> re) booleanicMCSE) ("a" \ "b" \ "a")
         -- it "works for Y fixed point" do
         --   shouldEqual ((parseProgram >>> re) combinatorY) ("a" \ "a")

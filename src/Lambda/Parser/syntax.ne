@@ -20,7 +20,6 @@
     startLine: 0, endLine: 0,
     startColumn: start, endColumn: end
   });
-  const fakePos = ParserData.fakePos;
 %}
 
 MAIN -> %ws:? FUNCTION %ws:? {% ([lspace, fun, rspace]) => fun.value %}

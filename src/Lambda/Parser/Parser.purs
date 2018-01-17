@@ -10,21 +10,18 @@ import Data.String.Regex (match, replace, split)
 import Data.String.Regex.Flags (global, noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Lambda.Data.Ast (Ast(..))
-import Lambda.Data.Parser (Block(Block), IndentLevel(IndentLevel), Position, Named(..))
+import Lambda.Data.Parser (Block(Block), IndentLevel(IndentLevel), Named(..), Position, fakePos)
 
--- | TODO: keep source info
 foreign import parse :: String -> Named String Position
 parseUnit :: String -> Named String Unit
 parseUnit text = (const unit) <$> (parse text)
 
--- | TODO: keep source info
 parseIndent :: String -> IndentLevel
 parseIndent string =
   let token = unsafeRegex "^ *" noFlags in
   let level = fromMaybe 0 $ (match token string) >>= find isJust >>= id <#> (length >>> flip div 2) in
-  IndentLevel level (trim string) -- | TODO: remove trim
+  IndentLevel level string
 
--- | TODO: keep source info
 parseBlocks :: String -> Array Block
 parseBlocks = splitLines >>> parseIndentation >>> filterEmpty >>> toBlocks where
   splitLines = split (unsafeRegex "\n" noFlags)
@@ -40,18 +37,19 @@ parseBlocks = splitLines >>> parseIndentation >>> filterEmpty >>> toBlocks where
     _ -> { blocks, lines }
   rest lines = fromMaybe [] (tail lines)
 
--- | TODO: keep source info
-blocksToAst :: Ast String Unit -> Array Block -> Ast String Unit
+blocksToAst :: Ast String Position -> Array Block -> Ast String Position
 blocksToAst upper blocks = subIfAbstraction upper where
   foldAll innermost = foldl reduce innermost (map parseRec blocks)
-  reduce body (Named name _ term) = Application (Abstraction name body unit unit) term unit
-  parseRec (Block text nested) = case parseUnit text of (Named name unit body) -> (Named name unit (blocksToAst body nested))
-  subIfAbstraction (Abstraction head body _ _) = Abstraction head (subIfAbstraction body) unit unit
+  reduce body (Named name decoration term) = Application (Abstraction name body decoration fakePos) term fakePos
+  parseRec (Block text nested) = case parse text of (Named name decoration body) -> (Named name decoration (blocksToAst body nested))
+  subIfAbstraction (Abstraction head body headDecoration decoration) = Abstraction head (subIfAbstraction body) headDecoration decoration
   subIfAbstraction term = foldAll term
 
--- | TODO: keep source info
-parseProgram :: String -> Ast String Unit
-parseProgram = parseBlocks >>> blocksToAst (Reference "main" unit)
+parseProgram :: String -> Ast String Position
+parseProgram = parseBlocks >>> blocksToAst (Reference "main" fakePos)
+
+parseProgramUnit :: String -> Ast String Unit
+parseProgramUnit text = (const unit) <$> parseProgram text
 
 -- | TODO: do it better
 prettyPrint :: String -> Array Block -> String

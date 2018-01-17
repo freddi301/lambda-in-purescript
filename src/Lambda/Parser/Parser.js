@@ -12,7 +12,7 @@ exports.parse = function parse(text) {
   }
   if (parser.results.length === 0) throw new Error("unecpected end of input");
   if (parser.results.length > 1) {
-    console.dir(parser.results, { colors: true, depth: null });
+    // console.dir(parser.results, { colors: true, depth: null });
     throw new Error("ambigous syntax");
   }
 };
