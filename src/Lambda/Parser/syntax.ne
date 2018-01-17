@@ -23,12 +23,7 @@
   const fakePos = ParserData.fakePos;
 %}
 
-MAIN ->
-  %ws:? FUNCTION %ws:? {%
-    ([lspace, fun, rspace]) => {
-      return fun.value
-    }
-  %}
+MAIN -> %ws:? FUNCTION %ws:? {% ([lspace, fun, rspace]) => fun.value %}
 
 LEAF ->
   REFERENCE {% ([reference]) => reference %}
@@ -39,20 +34,19 @@ FUNCTION ->
     ([[name, ...args], equal, space, body]) => {
       const text = name.text + args.reduce((m, i) => m + i.text, "") + equal.text + (space || { text: "" }).text + body.text;
       const namePos = pos(name.col - 1, name.col - 1 + name.value.length);
-      const namedAst = args.reverse().reduce((body, head) =>
-        ({ value: abs(head.value)(body.value)(fakePos)(fakePos) })
-      , body);
+      const namedAst = args.reverse().reduce((body, head) => {
+        const headPos = pos(head.col - 1, head.col - 1 + head.value.length);
+        const text = head.text + body.text;
+        const bodyPos = pos(head.col - 1, head.col - 1 + text.length);
+        return { value: abs(head.value)(body.value)(headPos)(bodyPos), text };
+      }, { ...body, text: equal.text + space.text + body.text });
       const ast = named(name.value)(namePos)(namedAst.value);
       return { col: name.col, text, value: ast };
     }
   %}
 
 ARGUMENTS ->
-  (%word %ws):+ {%
-    ([words, space]) => {
-      return words.map(([word]) => word)
-    }
-  %}
+  (%word %ws):+ {% ([words]) => words.map(([word, space]) => ({ ...word, text: word.text + space.text })) %}
 
 @{%
   const body = ([term]) => term
@@ -93,9 +87,7 @@ PAIR_RIGHT ->
 
 @{%
   const pairLeft = ([left, space, right]) => {
-    console.log(space)
     const text = left.text + (space || { text: "" }).text + right.text;
-    // console.log(text)
     const ast = app(left.value)(right.value)(pos(left.col - 1, left.col -1 + text.length));
     return { col: left.col, text, value: ast };
   }

@@ -28,7 +28,7 @@ mapReference f (Abstraction head body headDecoration decoration) = Abstraction (
 instance showAst :: (Show reference, Show decoration) => Show (Ast reference decoration) where
   show (Reference name decoration) = show name <> "[" <> show decoration <> "]"
   show (Application left right decoration) = "(" <> show left <> " " <> show right <> ")" <> "[" <> show decoration <> "]" 
-  show (Abstraction head body headDecoration decoration) = "(" <> show head <> " => " <> show body <> ")"
+  show (Abstraction head body headDecoration decoration) = "(" <> show head <> " => " <> show body <> ")" <> "[" <> show headDecoration <> "]" <> "[" <> show decoration <> "]"
 
 prettyPrint :: Ast String Unit -> String
 prettyPrint (Reference name _) = name

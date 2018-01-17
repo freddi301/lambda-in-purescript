@@ -7,16 +7,13 @@ import Test.Spec.Runner (RunnerEffects)
 import Test.Spec.Assertions (shouldEqual)
 
 import Lambda.Data.Ast (Ast(..), prettyPrint, αConversion, (!), (\))
-import Lambda.Data.Parser
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Ast" do
   describe "show" do
     it "works" do
-      -- shouldEqual (show ("x" \ "y" \ "x")) "unit(\"x\" => unit(\"y\" => unit\"x\"))"
-      -- shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "unit(\"x\" => unit(unit(unit\"x\" unit\"x\") unit\"x\"))"
-      shouldEqual (show ("x" \ "y" \ "x")) "(\"x\" => (\"y\" => \"x\"[unit]))"
-      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(\"x\" => ((\"x\"[unit] \"x\"[unit])[unit] \"x\"[unit])[unit])"
+      shouldEqual (show ("x" \ "y" \ "x")) "(\"x\" => (\"y\" => \"x\"[unit])[unit][unit])[unit][unit]"
+      shouldEqual (show ("x" \ ("x" ! "x" ! "x"))) "(\"x\" => ((\"x\"[unit] \"x\"[unit])[unit] \"x\"[unit])[unit])[unit][unit]"
   describe "prettyPrint" do
     it "works" do
       shouldEqual (prettyPrint ("x" \ "y" \ "x")) "(x => y => x)"
