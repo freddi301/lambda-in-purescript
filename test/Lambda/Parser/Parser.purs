@@ -1,7 +1,7 @@
 module Test.Lambda.Parser.Parser where
 
 import Lambda.Data.Ast (Ast(..), ref, (!), (\))
-import Lambda.Data.Parser (Block(..), Named(..), IndentLevel(..), fakePos)
+import Lambda.Data.Parser (Block(..), IndentLevel(..), Named(..), Position(..), fakePos)
 import Lambda.Parser.Parser (blocksToAst, parse, parseBlocks, parseIndent, parseProgram, parseUnit, prettify)
 import Prelude (Unit, discard, unit, ($))
 import Test.Lambda.Sources.Booleanic (booleanic)
@@ -81,9 +81,10 @@ secondline
       (prettify uglyLine) `shouldEqual` prettyLine
   describe "parse" do
     let check string ast = shouldEqual (parse string) ast
+    let pos start end = Position { file: "", startLine: 0, endLine: 0, startColumn: start, endColumn: end }
     it "works" do
-      check "hello = (hello)" $ Named "hello" fakePos (Reference "hello" fakePos)
-      check "ex1 = (a b)" $ Named "ex1" fakePos (Application (Reference "a" fakePos) (Reference "b" fakePos) fakePos)
-      check "ex2 = (a b c )" $ Named "ex2" fakePos (Application (Application (Reference "a" fakePos) (Reference "b" fakePos) fakePos) (Reference "c" fakePos) fakePos)
-      check "ex3 = (a, b, c)" $ Named "ex3" fakePos (Application (Reference "a" fakePos) (Application (Reference "b" fakePos) (Reference "c" fakePos) fakePos) fakePos)
-      check "ex4 ab cd = ef" $ Named "ex4" fakePos (Abstraction "ab" (Abstraction "cd" (Reference "ef" fakePos) fakePos fakePos) fakePos fakePos)
+      check "hello = (hello)" $ Named "hello" fakePos (Reference "hello" (pos 9 14))
+      check "ex1 = (a b)" $ Named "ex1" fakePos (Application (Reference "a" (pos 7 8)) (Reference "b" (pos 9 10)) fakePos)
+      check "ex2 = (a b c )" $ Named "ex2" fakePos (Application (Application (Reference "a" (pos 7 8)) (Reference "b" (pos 9 10)) fakePos) (Reference "c" (pos 11 12)) fakePos)
+      check "ex3 = (a, b, c)" $ Named "ex3" fakePos (Application (Reference "a" (pos 7 8)) (Application (Reference "b" (pos 10 11)) (Reference "c" (pos 13 14)) fakePos) fakePos)
+      check "ex4 ab cd = ef" $ Named "ex4" fakePos (Abstraction "ab" (Abstraction "cd" (Reference "ef" (pos 12 14)) fakePos fakePos) fakePos fakePos)
