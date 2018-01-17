@@ -1,5 +1,3 @@
-@builtin "whitespace.ne"
-
 @{%
   const moo = require("moo");
   const lexer = moo.compile({
@@ -26,17 +24,35 @@
 %}
 
 MAIN ->
-  _ FUNCTION _ {% ([lspace, fun, rspace]) => fun %}
+  %ws:? FUNCTION %ws:? {%
+    ([lspace, fun, rspace]) => {
+      return fun.value
+    }
+  %}
 
 LEAF ->
   REFERENCE {% ([reference]) => reference %}
 | PARENS {% ([parens]) => parens %}
 
 FUNCTION ->
-  ARGUMENTS "=" _ BODY {% ([[name, ...args], equal, space, body]) => named(name)(fakePos)(args.reverse().reduce((body, head) => abs(head)(body)(fakePos)(fakePos), body)) %}
+  ARGUMENTS "=" %ws:? BODY {%
+    ([[name, ...args], equal, space, body]) => {
+      const text = name.text + args.reduce((m, i) => m + i.text, "") + equal.text + (space || { text: "" }).text + body.text;
+      const namePos = pos(name.col - 1, name.col - 1 + name.value.length);
+      const namedAst = args.reverse().reduce((body, head) =>
+        ({ value: abs(head.value)(body.value)(fakePos)(fakePos) })
+      , body);
+      const ast = named(name.value)(namePos)(namedAst.value);
+      return { col: name.col, text, value: ast };
+    }
+  %}
 
 ARGUMENTS ->
-  (%word __):+ {% ([words, space]) => words.map(([word]) => word.value) %}
+  (%word %ws):+ {%
+    ([words, space]) => {
+      return words.map(([word]) => word)
+    }
+  %}
 
 @{%
   const body = ([term]) => term
@@ -48,34 +64,53 @@ BODY ->
 | REFERENCE {% body %}
 
 @{%
-  const parens = ([lparens, lspace, term, rspace, rparens]) => term
+  const parens = ([lparens, lspace, term, rspace, rparens]) => {
+    const text = lparens.text + (lspace || { text: "" }).text + term.text + (rspace || { text: "" }).text + rparens.text;
+    const ast = term.value;
+    return { col: lparens.col - 1, text, value: ast };
+  }
 %}
 PARENS ->
-  "(" _ PAIR_LEFT _ ")" {% parens %}
-| "(" _ PAIR_RIGHT _ ")" {% parens %}
-| "(" _ PARENS _ ")" {% parens %}
-| "(" _ REFERENCE _ ")" {% parens %}
+  "(" %ws:? PAIR_LEFT %ws:? ")" {% parens %}
+| "(" %ws:? PAIR_RIGHT %ws:? ")" {% parens %}
+| "(" %ws:? PARENS %ws:? ")" {% parens %}
+| "(" %ws:? REFERENCE %ws:? ")" {% parens %}
 
 @{%
-  const pairRight = ([left, lspace, comma, rspace, right]) => app(left)(right)(fakePos)
+  const pairRight = ([left, lspace, comma, rspace, right]) => {
+    const text = left.text + (lspace || { text: "" }).text + comma.text + (rspace || { text: "" }).text + right.text;
+    const ast = app(left.value)(right.value)(pos(left.col - 1, left.col - 1 + text.length));
+    return { col: left.col, text, value: ast }
+  }
 %}
 PAIR_RIGHT ->
-  LEAF _ "," _ LEAF {% pairRight %}
-| LEAF _ "," _ PAIR_RIGHT {% pairRight %}
-| LEAF _ "," _ PAIR_LEFT {% pairRight %}
-| PAIR_LEFT _ "," _ LEAF {% pairRight %}
-| PAIR_LEFT _ "," _ PAIR_LEFT {% pairRight %}
-| PAIR_LEFT _ "," _ PAIR_RIGHT {% pairRight %}
+  LEAF %ws:? "," %ws:? LEAF {% pairRight %}
+| LEAF %ws:? "," %ws:? PAIR_RIGHT {% pairRight %}
+| LEAF %ws:? "," %ws:? PAIR_LEFT {% pairRight %}
+| PAIR_LEFT %ws:? "," %ws:? LEAF {% pairRight %}
+| PAIR_LEFT %ws:? "," %ws:? PAIR_LEFT {% pairRight %}
+| PAIR_LEFT %ws:? "," %ws:? PAIR_RIGHT {% pairRight %}
 
 @{%
-  const pairLeft = ([left, space, right]) => { return app(left)(right)(fakePos) }
+  const pairLeft = ([left, space, right]) => {
+    console.log(space)
+    const text = left.text + (space || { text: "" }).text + right.text;
+    // console.log(text)
+    const ast = app(left.value)(right.value)(pos(left.col - 1, left.col -1 + text.length));
+    return { col: left.col, text, value: ast };
+  }
 %}
 PAIR_LEFT ->
-  PARENS _ PARENS {% pairLeft %}
-| PARENS _ REFERENCE {% pairLeft %}
-| REFERENCE _ PARENS {% pairLeft %}
-| REFERENCE __ REFERENCE {% pairLeft %}
-| PAIR_LEFT _ PARENS {% pairLeft %}
-| PAIR_LEFT __ REFERENCE {% pairLeft %}
+  PARENS %ws:? PARENS {% pairLeft %}
+| PARENS %ws:? REFERENCE {% pairLeft %}
+| REFERENCE %ws:? PARENS {% pairLeft %}
+| REFERENCE %ws REFERENCE {% pairLeft %}
+| PAIR_LEFT %ws:? PARENS {% pairLeft %}
+| PAIR_LEFT %ws REFERENCE {% pairLeft %}
 
-REFERENCE -> %word {% ([reference]) => ref(reference.value)(pos(reference.col - 1, reference.col - 1 + reference.text.length)) %}
+REFERENCE -> %word {%
+  ([reference]) => {
+    const ast = ref(reference.value)(pos(reference.col - 1, reference.col - 1 + reference.text.length));
+    return { ...reference, value: ast };
+  }
+%}

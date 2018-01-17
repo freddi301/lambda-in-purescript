@@ -83,8 +83,8 @@ secondline
     let check string ast = shouldEqual (parse string) ast
     let pos start end = Position { file: "", startLine: 0, endLine: 0, startColumn: start, endColumn: end }
     it "works" do
-      check "hello = (hello)" $ Named "hello" fakePos (Reference "hello" (pos 9 14))
-      check "ex1 = (a b)" $ Named "ex1" fakePos (Application (Reference "a" (pos 7 8)) (Reference "b" (pos 9 10)) fakePos)
-      check "ex2 = (a b c )" $ Named "ex2" fakePos (Application (Application (Reference "a" (pos 7 8)) (Reference "b" (pos 9 10)) fakePos) (Reference "c" (pos 11 12)) fakePos)
-      check "ex3 = (a, b, c)" $ Named "ex3" fakePos (Application (Reference "a" (pos 7 8)) (Application (Reference "b" (pos 10 11)) (Reference "c" (pos 13 14)) fakePos) fakePos)
-      check "ex4 ab cd = ef" $ Named "ex4" fakePos (Abstraction "ab" (Abstraction "cd" (Reference "ef" (pos 12 14)) fakePos fakePos) fakePos fakePos)
+      check "hello = (hello)" $ Named "hello" (pos 0 5) (Reference "hello" (pos 9 14))
+      check "ex1 = a b" $ Named "ex1" (pos 0 3) (Application (Reference "a" (pos 6 7)) (Reference "b" (pos 8 9)) (pos 6 9))
+      check "ex2 = (a b c )" $ Named "ex2" (pos 0 3) (Application (Application (Reference "a" (pos 7 8)) (Reference "b" (pos 9 10)) (pos 7 10)) (Reference "c" (pos 11 12)) (pos 7 12))
+      check "ex3 = (a, b, c)" $ Named "ex3" (pos 0 3) (Application (Reference "a" (pos 7 8)) (Application (Reference "b" (pos 10 11)) (Reference "c" (pos 13 14)) (pos 10 14)) (pos 7 14))
+      check "ex4 ab cd = ef" $ Named "ex4" (pos 0 3) (Abstraction "ab" (Abstraction "cd" (Reference "ef" (pos 12 14)) fakePos fakePos) fakePos fakePos)
