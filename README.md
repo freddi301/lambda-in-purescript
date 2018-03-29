@@ -109,4 +109,21 @@ but a worker could get a task from eager before all from lazy are executed based
 
 - implement beta-abstraction (for free variables binding)
 
-- eta-abstraction (maybe useful for type restrictions) 
+- eta-abstraction (maybe useful for type restrictions)
+
+- syntax sugars
+
+  (a.b.c)
+  (c (b a))
+
+  (a, b, c)
+  (a (b c))
+
+  [a b c]
+  (start => cons => (cons (cons (cons start a) b) c))
+
+  [a, b, c]
+  (endin => cons => (cons a (cons b (cons c endin)))
+
+  { x = 1; y = 2; 3 }
+  (joiner => joiner(1, x => joiner(2, y => 3)))
