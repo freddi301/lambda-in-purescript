@@ -2,7 +2,9 @@ module Lambda.Parser.Parser where
 
 import Prelude
 
-import Data.Array (filter, head, snoc, tail)
+import Data.Map as Map
+import Data.Array (filter, head, snoc, tail, fromFoldable)
+import Data.Function (flip)
 import Data.Foldable (find, foldl)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.String (trim, length)
@@ -10,7 +12,7 @@ import Data.String.Regex (match, replace, split)
 import Data.String.Regex.Flags (global, noFlags)
 import Data.String.Regex.Unsafe (unsafeRegex)
 import Lambda.Data.Ast (Ast(..))
-import Lambda.Data.Parser (Block(Block), IndentLevel(IndentLevel), Named(..), Position, fakePos)
+import Lambda.Data.Parser (Block(Block), IndentLevel(IndentLevel), Named(..), Position(Position), fakePos)
 
 foreign import parse :: String -> Named String Position
 parseUnit :: String -> Named String Unit
@@ -59,3 +61,16 @@ prettyPrint indentation blocks = foldl foldBlocks "" blocks where
 
 prettify :: String -> String
 prettify = parseBlocks >>> prettyPrint ""
+
+--getSourceMap :: Ast String Position -> Map.Map Position (Ast String Position)
+getSourceMap ast column = filter isJust found where
+  found = map (flip Map.lookup sourceMap) positions
+  positions = findSource sourceMap
+  sourceMap = getSourceMap_ ast Map.empty
+  findSource map = filter (\(Position pos) -> (pos.startColumn <= column) && (column <= pos.endColumn)) (fromFoldable $ Map.keys map)
+  getSourceMap_ :: Ast String Position -> Map.Map Position (Ast String Position) -> Map.Map Position (Ast String Position)
+  getSourceMap_ ast map = case ast of
+    Reference _ position -> Map.insert position ast map
+    Application left right position -> (Map.insert position ast (getSourceMap_ left (getSourceMap_ right map)))
+    Abstraction head body headPosition bodyPostion -> 
+      Map.insert bodyPostion ast (Map.insert headPosition ast (getSourceMap_ body map))

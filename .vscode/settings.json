@@ -1,3 +1,4 @@
 {
-  "purescript.pscIdeServerExe": "purs ide server"
+  "purescript.pscIdeServerExe": "yarn purs ide server",
+  "editor.tabSize": 2
 }

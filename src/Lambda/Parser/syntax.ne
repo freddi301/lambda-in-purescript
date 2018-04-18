@@ -38,14 +38,14 @@ FUNCTION ->
         const text = head.text + body.text;
         const bodyPos = pos(head.col - 1, head.col - 1 + text.length);
         return { value: abs(head.value)(body.value)(headPos)(bodyPos), text };
-      }, { ...body, text: equal.text + space.text + body.text });
+      }, Object.assign({}, body, { text: equal.text + space.text + body.text }));
       const ast = named(name.value)(namePos)(namedAst.value);
       return { col: name.col, text, value: ast };
     }
   %}
 
 ARGUMENTS ->
-  (%word %ws):+ {% ([words]) => words.map(([word, space]) => ({ ...word, text: word.text + space.text })) %}
+  (%word %ws):+ {% ([words]) => words.map(([word, space]) => Object.assign({}, word, { text: word.text + space.text })) %}
 
 @{%
   const body = ([term]) => term
@@ -102,6 +102,6 @@ PAIR_LEFT ->
 REFERENCE -> %word {%
   ([reference]) => {
     const ast = ref(reference.value)(pos(reference.col - 1, reference.col - 1 + reference.text.length));
-    return { ...reference, value: ast };
+    return Object.assign({}, reference, { value: ast });
   }
 %}

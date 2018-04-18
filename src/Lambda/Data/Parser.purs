@@ -1,10 +1,11 @@
 module Lambda.Data.Parser where
 
 import Lambda.Data.Ast (Ast)
-import Prelude (class Eq, class Functor, class Show, show, (<$>), (<>))
+import Prelude (class Eq, class Ord, class Functor, class Show, show, (<$>), (<>))
 
 data Position = Position { file :: String, startLine :: Int, endLine :: Int, startColumn :: Int, endColumn :: Int }
 derive instance eqPosition :: Eq Position
+derive instance ordPosition :: Ord Position
 instance showPosition :: Show Position where
   show (Position { startColumn, endColumn }) = show startColumn <> "," <> show endColumn
 fakePos :: Position

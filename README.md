@@ -23,6 +23,8 @@ lazy, eager, symbolic, where the evaluations will be partitioned
 naively the all the jobs from lazy would be executed before proceeding to eager and then lazy
 but a worker could get a task from eager before all from lazy are executed based on data locality (aka cost)
 
+[VSCode extension](https://github.com/freddi301/lambda-in-purescript-vscode.git)
+
 ## TODO
 
 - implement and test https://en.wikipedia.org/wiki/Lambda_calculus#Standard_terms

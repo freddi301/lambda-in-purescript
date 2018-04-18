@@ -2,8 +2,8 @@ module Test.Lambda.Control.Infere where
 
 import Data.Map as Map
 import Data.Maybe as Maybe
-import Lambda.Control.Infere (Constraint(..), infere)
-import Lambda.Data.Ast ((\))
+import Lambda.Control.Infere (Constraint(..), infere, showType)
+import Lambda.Data.Ast ((\), (!))
 import Prelude (Unit, const, discard, ($), (<$>), (>>=))
 import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)

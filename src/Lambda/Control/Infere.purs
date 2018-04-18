@@ -5,7 +5,7 @@ import Data.Map as Map
 import Data.Maybe as Maybe
 import Data.Ord as Ord
 import Lambda.Data.Ast (Ast(..))
-import Prelude (class Eq, class Show, show, (+), (<>))
+import Prelude (class Eq, class Show, show, (+), (<>), map, ($))
 import Data.Record (unionMerge)
 
 infere :: forall reference decoration . Ord.Ord reference =>
@@ -45,3 +45,10 @@ addConstraint typ constraint constraints =
   case Map.lookup typ constraints of
     Maybe.Nothing -> Map.insert typ (Array.singleton constraint) constraints
     Maybe.Just cons -> Map.insert typ (Array.cons constraint cons) constraints
+
+showType :: Constraints -> Int -> String
+showType constraints typ = case Map.lookup typ constraints of
+  Maybe.Nothing -> show typ
+  Maybe.Just [cons] -> case cons of
+    IsAbstraction head body -> "(" <> showType constraints head <> " -> " <> showType constraints body <> ")"
+  Maybe.Just _ -> show typ
