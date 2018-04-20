@@ -65,4 +65,36 @@ unify alias existing context =
   if alias already associated in context
     then existing must be equal to that
     else associate
+    
+    
+    
+    
+    
+    
+#mutual recursion
+
+Z := λg.(λx.g (λv.((x x) v))) (λx.g (λv.((x x) v)))
+
+body
+  a x = a b x
+  b y = b a y
+
+(select_a => select_b =>
+ (scope => a => b => body)(
+  Z(rec =>
+   (a => b => s => (s)
+    (a => x => (a)(b)(x))
+    (b => y => (b)(a)(y))
+   )
+   (rec(select_a))
+   (rec(select_b))
+  )
+ )
+(select_a)
+(select_b)
+)
+(a => b => a)
+(a => b => b)
+
+
 
