@@ -12,6 +12,8 @@ import Test.Spec.Runner (RunnerEffects)
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Evaluate" do
+  -- | Z := λg.(λx.g (λv.((x x) v))) (λx.g (λv.((x x) v))) 
+  let z = "g" \ (("x" \ "g" ! ("v" \ (("x" ! "x") ! "v"))) ! ("x" \ "g" ! ("v" \ (("x" ! "x") ! "v"))))
   describe "collectFreeReferences" do
     it "works" do
       let check scope term expected = shouldEqual (collectFreeReferences { scope: Set.fromFoldable scope, free: Set.empty, term }) (Set.fromFoldable expected)
@@ -49,6 +51,9 @@ test = describe "Evaluate" do
     pending "list"
     pending "church numerals"
     pending "Y combinator"
+    describe "Z fixed point combinator" do
+      it "doesn't explode" do
+        (re z) `shouldEqual` z
     -- describe "program checks" do
     --   it "works for booleanic" do
     --     shouldEqual ((parseProgram >>> re) booleanic) ("a" \ "b" \ "a")
@@ -125,6 +130,9 @@ test = describe "Evaluate" do
     pending "list"
     pending "church numerals"
     pending "Y combinator"
+    describe "Z fixed point combinator" do
+      it "doesn't explode" do
+        (re z) `shouldEqual` z
   describe "reifyEvaluateLazySingleStep" do
     let re = reifyEvaluateLazySingleStep
     it "identity" do
@@ -166,6 +174,9 @@ test = describe "Evaluate" do
     pending "list"
     pending "church numerals"
     pending "Y combinator"
+    -- describe "Z fixed point combinator" do
+    --   it "doesn't explode" do
+    --     (re z) `shouldEqual` z
     describe "symbolic evaluation" do
       describe "cases" do
         let identity = "x" \ "x"

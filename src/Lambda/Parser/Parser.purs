@@ -50,6 +50,9 @@ blocksToAst upper blocks = subIfAbstraction upper where
 parseProgram :: String -> Ast String Position
 parseProgram = parseBlocks >>> blocksToAst (Reference "main" fakePos)
 
+showProgram :: Ast String Position -> String
+showProgram = show
+
 parseProgramUnit :: String -> Ast String Unit
 parseProgramUnit text = (const unit) <$> parseProgram text
 

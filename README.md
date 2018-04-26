@@ -27,10 +27,6 @@ but a worker could get a task from eager before all from lazy are executed based
 
 ## TODO
 
-- implement and test https://en.wikipedia.org/wiki/Lambda_calculus#Standard_terms
-
-- see https://en.wikipedia.org/wiki/Lambda_calculus#Optimal_reduction
-
 - introduce types and metaprogramming
 
 - debugger
@@ -87,8 +83,6 @@ but a worker could get a task from eager before all from lazy are executed based
 
 - finish tests
 
-- η-conversion + α-conversion + α-equivalence can be used to validate laws (example comonad laws)
-
 - parallel execution
 
 - distributed execution
@@ -100,8 +94,6 @@ but a worker could get a task from eager before all from lazy are executed based
 - derive like in typeclasses
 
 - stackless interpret (lazy, eager, symbolic)
-
-- extract value (using symbolic execution)
 
 - compiler ANF backaend llvm?
 
@@ -129,3 +121,13 @@ but a worker could get a task from eager before all from lazy are executed based
 
   { x = 1; y = 2; 3 }
   (joiner => joiner(1, x => joiner(2, y => 3)))
+
+## For sake of completeness
+
+- implement and test https://en.wikipedia.org/wiki/Lambda_calculus#Standard_terms
+
+- see https://en.wikipedia.org/wiki/Lambda_calculus#Optimal_reduction
+
+- η-conversion + α-conversion + α-equivalence can be used to validate laws (example comonad laws)
+
+- extract value (using symbolic execution)
