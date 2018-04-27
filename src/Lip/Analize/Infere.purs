@@ -1,20 +1,20 @@
 module Lip.Analize.Infere where
 
+import Data.Maybe
 import Data.Array as Array
 import Data.Map as Map
-import Data.Maybe as Maybe
 import Data.Ord as Ord
-import Lip.Data.Ast (Ast(..))
-import Prelude (class Eq, class Show, show, (+), (<>))
 import Data.Record as Record
+import Lip.Data.Ast (Ast(..))
+import Prelude (class Eq, class Show, show, (+), (<>), (==))
 
 infere :: ∀ reference decoration . Ord.Ord reference =>
   { ast :: Ast reference { | decoration }, nextType :: Int, typScope :: Map.Map reference Int, constraints :: Constraints } ->
   { typ :: Int, nextType :: Int, constraints :: Constraints, ast :: Ast reference { typ :: Int | decoration } }
 infere { ast, nextType, typScope, constraints } = case ast of
   Reference name decoration -> case Map.lookup name typScope of
-    Maybe.Just typ -> { typ, nextType, constraints, ast: Reference name (Record.unionMerge decoration { typ }) }
-    Maybe.Nothing -> { typ: nextType, nextType: nextType + 1, constraints, ast: Reference name (Record.unionMerge decoration { typ: nextType }) } -- | TODO: manage free variable case (pass arround typScope?)
+    Just typ -> { typ, nextType, constraints, ast: Reference name (Record.unionMerge decoration { typ }) }
+    Nothing -> { typ: nextType, nextType: nextType + 1, constraints, ast: Reference name (Record.unionMerge decoration { typ: nextType }) } -- | TODO: manage free variable case (pass arround typScope?)
   Abstraction head body decoration ->
     let thisAbsType = nextType in
     let thisAbsHeadType = nextType + 1 in
@@ -40,5 +40,13 @@ type Constraints = Map.Map Int (Array Constraint)
 addConstraint :: Int -> Constraint -> Constraints -> Constraints
 addConstraint typ constraint constraints =
   case Map.lookup typ constraints of
-    Maybe.Nothing -> Map.insert typ (Array.singleton constraint) constraints
-    Maybe.Just cons -> Map.insert typ (Array.cons constraint cons) constraints
+    Nothing -> Map.insert typ (Array.singleton constraint) constraints
+    Just cons -> Map.insert typ (Array.cons constraint cons) constraints
+
+showType :: Constraints -> Int -> String
+showType constraints typ = case Map.lookup typ constraints of
+  Nothing -> show typ
+  Just [cons] -> case cons of
+    IsAbstraction head body | head == typ -> show head <> "*(" <> show head <> " -> " <> showType constraints body <> ")"
+    IsAbstraction head body -> "(" <> showType constraints head <> " -> " <> showType constraints body <> ")"
+  Just _ -> show typ <> "#"

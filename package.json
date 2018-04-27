@@ -5,6 +5,7 @@
     "run": "npm run copy:syntax && pulp run",
     "build": "pulp build && npm run copy:syntax",
     "test": "npm run copy:syntax && pulp test",
+    "test:watch": "pulp -w test",
     "repl": "npm run copy:syntax && pulp repl",
     "docs": "pulp docs",
     "precommit": "npm test",
