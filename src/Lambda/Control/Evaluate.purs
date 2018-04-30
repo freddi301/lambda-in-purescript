@@ -2,7 +2,7 @@ module Lambda.Control.Evaluate where
 
 import Data.Set as Set
 import Lambda.Data.Ast (Ast(..), mapReference)
-import Prelude (class Eq, class Ord, ($), (==), (+))
+import Prelude (class Eq, class Ord, not, ($), (&&), (+), (==))
 
 -- | `reify` takes a reference and substitutes every occurrence of it respecting lexical scoping rules
 -- | it corresponds to β-reduction
@@ -49,7 +49,7 @@ reifyEvaluateLazySingleStep term = case term of
 -- | `reifyEvaluateSymbolic` same as `reifyEvaluateEager` enhanced with symbolic execution
 -- | obtained by recursive α-conversion in abstraction bodies
 -- | https://en.wikipedia.org/wiki/Symbolic_execution
-reifyEvaluateSymbolic :: ∀ reference decoration . Eq reference =>
+reifyEvaluateSymbolic :: ∀ reference decoration . Eq reference => Ord reference =>
   Int -> Ast reference decoration -> Ast reference decoration
 reifyEvaluateSymbolic nextSymbol ast =
   let rec = reifyEvaluateSymbolic in
@@ -70,6 +70,7 @@ reifyEvaluateSymbolic nextSymbol ast =
 
 data Symbol reference variation = Symbolic reference variation | Concrete reference
 derive instance eqSymbol :: (Eq reference, Eq variation) => Eq (Symbol reference variation)
+derive instance ordSymbol :: (Ord reference, Ord variation) => Ord (Symbol reference variation)
 extractReference :: ∀ reference variation . Symbol reference variation -> reference
 extractReference symbol = case symbol of
   Concrete reference -> reference
@@ -87,9 +88,13 @@ collectFreeReferences { free, scope, term } = case term of
   Application left right _ -> Set.union (collectFreeReferences { free, scope, term: left }) (collectFreeReferences { free, scope, term: right })
   Abstraction head body _ _ -> collectFreeReferences { free, scope: Set.insert head scope, term: body }
 
+notUsedIn :: ∀ reference decoration . Eq reference => Ord reference =>
+  reference -> Ast reference decoration -> Boolean
+notUsedIn head body = not (Set.member head $ collectFreeReferences { free: Set.empty, scope: Set.empty, term: body })
 -- instance showSetReference :: (Show reference) => Show (Set.Set reference) where show = show <<< Foldable.foldr (Array.cons) []
 
-ηConversion :: ∀ reference decoration . Eq reference =>
+ηConversion :: ∀ reference decoration . Eq reference => Ord reference =>
   Ast reference decoration -> Ast reference decoration
-ηConversion (Abstraction head (Application body (Reference ref _) _) _ _) | head == ref = body
+ηConversion (Abstraction head (Application body (Reference ref _) _) _ _) | (head == ref) && (head `notUsedIn` body) = body 
 ηConversion ast = ast
+

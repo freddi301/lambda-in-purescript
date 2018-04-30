@@ -2,16 +2,18 @@
   "version": "0.1.1",
   "name": "lambda-in-purescript",
   "scripts": {
-    "run": "npm run copy:syntax && pulp run",
-    "build": "pulp build && npm run copy:syntax",
-    "test": "npm run copy:syntax && pulp test",
-    "test:watch": "pulp -w test",
-    "repl": "npm run copy:syntax && pulp repl",
+    "run": "npm run build:syntax && pulp run",
+    "build": "pulp build && npm run build:syntax",
+    "test": "npm run build:syntax && pulp test",
+    "test:watch": "npm run build:syntax && pulp -w test",
+    "repl": "npm run build:syntax && pulp repl",
     "docs": "pulp docs",
     "precommit": "npm test",
     "postinstall": "bower install",
     "prepublish": "npm run build",
-    "copy:syntax": "nearleyc src/Lambda/Parser/syntax.ne -o output/Lambda.Parser.Parser/grammar.js"
+    "build:syntax": "npm run copy:syntax && npm run copy:syntax1",
+    "copy:syntax": "nearleyc src/Lambda/Parser/syntax.ne -o output/Lambda.Parser.Parser/grammar.js",
+    "copy:syntax1": "nearleyc src/Lip/Parser1/syntax1.ne -o output/Lip.Parser.Parser1/grammar1.js"
   },
   "dependencies": {
     "moo": "^0.4.3",

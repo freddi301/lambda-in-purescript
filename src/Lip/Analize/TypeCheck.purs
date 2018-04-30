@@ -2,10 +2,10 @@ module Lip.Analize.TypeCheck where
 
 import Prelude (class Eq, class Show, bind, show, (<>), (==))
 
-import Data.Either
+import Data.Either (Either(..), note)
 import Data.Foldable (find)
 import Data.Map as Map
-import Data.Maybe
+import Data.Maybe (Maybe(..))
 import Lip.Analize.Infere (Constraints, Constraint(..))
 
 type Criteria = Context -> TypeAlias -> Either TypeError Context

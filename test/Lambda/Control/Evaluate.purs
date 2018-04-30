@@ -4,6 +4,7 @@ import Data.Set as Set
 import Lambda.Control.Evaluate (collectFreeReferences, reifyEvaluateEager, reifyEvaluateEagerSingleStep, reifyEvaluateLazy, reifyEvaluateLazySingleStep, reifyEvaluateSymbolic, ηConversion)
 import Lambda.Data.Ast (Ast(..), (!), (\))
 import Lambda.Parser.Parser (parseProgramUnit)
+import Test.Lambda.Data.Common (y, z)
 import Prelude (Unit, unit, discard, (>>>))
 import Test.Lambda.Sources.Booleanic (booleanic, booleanicMCSE)
 import Test.Spec (Spec, describe, it, pending)
@@ -12,8 +13,6 @@ import Test.Spec.Runner (RunnerEffects)
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Evaluate" do
-  -- | Z := λg.(λx.g (λv.((x x) v))) (λx.g (λv.((x x) v))) 
-  let z = "g" \ (("x" \ "g" ! ("v" \ (("x" ! "x") ! "v"))) ! ("x" \ "g" ! ("v" \ (("x" ! "x") ! "v"))))
   describe "collectFreeReferences" do
     it "works" do
       let check scope term expected = shouldEqual (collectFreeReferences { scope: Set.fromFoldable scope, free: Set.empty, term }) (Set.fromFoldable expected)
