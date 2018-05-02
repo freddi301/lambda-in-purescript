@@ -97,6 +97,15 @@ derive instance eqAst :: (Eq reference, Eq decoration) => Eq (Ast reference deco
 data Mangled reference symbol = Mangled symbol | Unmangled reference
 derive instance eqMangled :: (Eq reference, Eq symbol) => Eq (Mangled reference symbol)
 
+αEquals :: 
+  ∀ reference decoration .
+  Eq reference =>
+  Ast reference decoration ->
+  Ast reference decoration ->
+  Boolean
+αEquals left right = (α left) == (α right) where
+  α ast = (αConversion { ast: (const unit) <$> left, map: Map.empty, symbol: 0 }).ast
+
 replaceReference :: ∀ reference decoration . Eq reference => reference -> reference -> Ast reference decoration -> Ast reference decoration
 replaceReference ref value term = case term of
   Reference name decoration -> if ref == name then (Reference value decoration) else term

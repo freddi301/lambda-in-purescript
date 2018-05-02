@@ -1,8 +1,8 @@
 module Lambda.Control.Evaluate where
 
 import Data.Set as Set
-import Lambda.Data.Ast (Ast(..), mapReference)
-import Prelude (class Eq, class Ord, not, ($), (&&), (+), (==))
+import Lambda.Data.Ast (Ast(..), mapReference, αEquals)
+import Prelude (class Eq, class Ord, not, ($), (&&), (+), (==), (<$>), const, unit)
 
 -- | `reify` takes a reference and substitutes every occurrence of it respecting lexical scoping rules
 -- | it corresponds to β-reduction
@@ -54,6 +54,7 @@ reifyEvaluateSymbolic :: ∀ reference decoration . Eq reference => Ord referenc
 reifyEvaluateSymbolic nextSymbol ast =
   let rec = reifyEvaluateSymbolic in
   let term = ηConversion ast in case term of
+  Abstraction head (Application left right _) _ _ | (noDecoration left) == (noDecoration right) -> term -- | fixed point guard
   Application (Abstraction head body _ _) right@(Abstraction _ _ _ _) _ -> rec nextSymbol $ reify head right body
   Application (Abstraction head body _ _) right _ -> rec nextSymbol $ reify head right body
   Application (Reference _ _) (Reference _ _) _ -> term
@@ -98,3 +99,4 @@ notUsedIn head body = not (Set.member head $ collectFreeReferences { free: Set.e
 ηConversion (Abstraction head (Application body (Reference ref _) _) _ _) | (head == ref) && (head `notUsedIn` body) = body 
 ηConversion ast = ast
 
+noDecoration ast = const unit <$> ast
