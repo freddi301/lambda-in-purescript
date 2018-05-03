@@ -8,6 +8,7 @@ import Test.Lambda.Data.Ast as Ast
 import Test.Lambda.Parser.Parser as Parser
 import Test.Lambda.Control.Common as Common
 import Test.Lip.Analize.TypeCheck as TypeCheck
+import Test.Lip.Evaluate.Reify.Eager as EvaluateReifyEager
 import Test.Lip.Parser.Parser1 as Parser1
 import Test.Spec.Reporter.Console (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
@@ -21,3 +22,4 @@ main = run [consoleReporter] do
   TypeCheck.test
   Parser1.test
   Common.test
+  EvaluateReifyEager.test
