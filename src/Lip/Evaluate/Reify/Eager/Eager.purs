@@ -43,3 +43,36 @@ stop inspect term = do
       rightAst <- recursive right
       recursive $ Application leftAst rightAst decoration
     _ -> inspect term
+
+-- | evaluate == step >>> runStep
+step ::
+  ∀ reference decoration .
+  Eq reference =>
+  Ast reference decoration ->
+  Step (Ast reference decoration)
+step term = case term of
+  Application (Abstraction head body _) right@(Abstraction _ _ _) _ ->
+    Continue $ \_ -> step $ reify head right body
+  Application left right decoration -> do
+    leftAst <- step left
+    rightAst <- step right
+    Continue $ \_ -> step $ Application leftAst rightAst decoration
+  _ -> Done term
+
+data Step result = Done result | Continue (Unit -> Step result)
+
+instance bindStep :: Bind Step where
+  bind (Done result) next = next result
+  bind (Continue task) next = bind (task unit) next
+
+instance applyStep :: Apply Step where
+  apply (Done f) step = map f step
+  apply (Continue task) step = Continue $ \_ -> apply (task unit) step
+
+instance functorStep :: Functor Step where
+  map f (Done result) = Done $ f result
+  map f (Continue task) = Continue $ \_ -> map f $ task unit
+
+runStep :: ∀ result . Step result -> result
+runStep (Done result) = result
+runStep (Continue task) = runStep $ task unit

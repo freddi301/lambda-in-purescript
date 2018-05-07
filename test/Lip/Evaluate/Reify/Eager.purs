@@ -40,6 +40,8 @@ test = describe "reify eager" do
     it "stops on ast node" do
       let stopsOn ast result = (stop stops ast) `shouldEqual` result
       (("a" \ "b" \ ("STOP" ! "a")) ! ("x" \ "x") ! ("x" \ "y" \ "y")) `stopsOn` (Left ("x" \ "x"))
+  describe "step" do
+    BooleanTest.test $ (step >>> runStep)
 
 globals :: Evaluate String Unit -> Evaluate String Unit
 globals evaluate ast = evaluate replace where
