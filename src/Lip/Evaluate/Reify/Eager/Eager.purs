@@ -1,10 +1,10 @@
 module Lip.Evaluate.Reify.Eager where
 
-import Prelude
 import Data.Either
+import Lip.Evaluate
+import Prelude
 
 import Lip.Data.Ast (Ast(..))
-import Lip.Evaluate
 import Lip.Evaluate.Reify (reify)
 
 -- | `reifyEvaluateEager` evaluates a lambda term using the reify mechanism,
@@ -19,12 +19,14 @@ evaluate term = case term of
 -- | evaluate == enhance id
 enhance ::
   ∀ reference decoration . Eq reference =>
-  (Evaluate reference decoration -> Evaluate reference decoration) ->
+  Evaluate reference decoration ->
   Evaluate reference decoration
-enhance enhancer = enhancer evaluate where
-  evaluate (Application (Abstraction head body _) right@(Abstraction _ _ _) _) = (enhancer evaluate) $ reify head right body
-  evaluate (Application left right decoration) = (enhancer evaluate) $ Application ((enhancer evaluate) left) ((enhancer evaluate) right) decoration
-  evaluate term = term
+enhance enhancer term =
+  let recursive = enhance enhancer in
+  case enhancer term of
+    Application (Abstraction head body _) right@(Abstraction _ _ _) _ -> recursive $ reify head right body
+    Application left right decoration -> recursive $ Application (recursive left) (recursive right) decoration
+    term -> term
 
 -- | evaluate == (stop Right) >>> fromRight
 stop ::
@@ -76,3 +78,21 @@ instance functorStep :: Functor Step where
 runStep :: ∀ result . Step result -> result
 runStep (Done result) = result
 runStep (Continue task) = runStep $ task unit
+
+-- | evaluate == (stepEnhance id) >>> runStep
+stepEnhance ::
+  ∀ reference decoration .
+  Eq reference =>
+  Evaluate reference decoration ->
+  Ast reference decoration ->
+  Step (Ast reference decoration)
+stepEnhance enhancer term =
+  let recursive = stepEnhance enhancer in
+  case enhancer term of
+    Application (Abstraction head body _) right@(Abstraction _ _ _) _ ->
+      Continue $ \_ -> recursive $ reify head right body
+    Application left right decoration -> do
+      leftAst <- recursive left
+      rightAst <- recursive right
+      Continue $ \_ -> recursive $ Application leftAst rightAst decoration
+    _ -> Done $ enhancer term
