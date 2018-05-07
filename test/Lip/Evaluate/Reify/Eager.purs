@@ -3,11 +3,9 @@ module Test.Lip.Evaluate.Reify.Eager where
 import Data.Either
 import Lip.Evaluate.Reify.Eager
 import Prelude
-import Prelude
 
-import Lambda.Data.Ast (ref)
 import Lip.Data.Ast (Ast(..))
-import Lip.Data.Ast.Helpers ((\), (!))
+import Lip.Data.Ast.Helpers ((\), (!), ref)
 import Lip.Evaluate (Evaluate)
 import Prelude (Unit, unit, discard, (>>>))
 import Test.Lip.Evaluate.Boolean as BooleanTest
@@ -39,7 +37,9 @@ test = describe "reify eager" do
         ("OR" ! ("AND" ! "TRUE" ! "TRUE") ! ("NOT" ! "TRUE")) `evaluatesTo` (ref "TRUE")
   describe "stop" do
     BooleanTest.test $ \ast -> (either (const ast) id) (stop Right ast)
-    pending "stop on ast node"
+    it "stops on ast node" do
+      let stopsOn ast result = (stop stops ast) `shouldEqual` result
+      (("a" \ "b" \ ("STOP" ! "a")) ! ("x" \ "x") ! ("x" \ "y" \ "y")) `stopsOn` (Left ("x" \ "x"))
 
 globals :: Evaluate String Unit -> Evaluate String Unit
 globals evaluate ast = evaluate replace where
@@ -50,3 +50,8 @@ globals evaluate ast = evaluate replace where
     Reference "AND" _ -> "a" \ "b" \ "a" ! "b" ! "FALSE"
     Reference "OR" _ -> "a" \ "b" \ "a" ! "FALSE" ! "b"
     _ -> ast
+
+stops :: Ast String Unit -> Either (Ast String Unit) (Ast String Unit)
+stops ast = case ast of
+  Application (Reference "STOP" _) body _ -> Left body
+  _ -> Right ast
