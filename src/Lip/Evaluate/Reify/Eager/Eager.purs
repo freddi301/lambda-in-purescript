@@ -7,7 +7,7 @@ import Prelude
 import Lip.Data.Ast (Ast(..))
 import Lip.Evaluate.Reify (reify)
 
--- | `reifyEvaluateEager` evaluates a lambda term using the reify mechanism,
+-- | `evaluate` evaluates a lambda term using the reify mechanism,
 -- | the execution is eager,
 -- | there is no scope, as soon variable gets bound, every occurrence is substituted with its value.
 evaluate :: ∀ reference decoration . Eq reference => Evaluate reference decoration
@@ -106,14 +106,12 @@ intermediate ::
 intermediate term = Intermediate term next where
   next (Application (Abstraction head body _) right@(Abstraction _ _ _) _) =
     intermediate $ reify head right body
-  next (Application left@(Abstraction _ _ _) right decoration) = nextRight $ intermediate right where
-    nextRight (Intermediate result task) = Intermediate result (task >>> nextRight)
-    nextRight (End rightAst) = intermediate $ Application left rightAst decoration
-  next (Application left right decoration) = nextLeft $ intermediate left where
-    nextLeft (Intermediate result task) = Intermediate result (task >>> nextLeft)
-    nextLeft (End leftAst) = intermediate $ Application leftAst right decoration
+  next (Application left@(Abstraction _ _ _) right decoration) = peek right \rightAst -> Application left rightAst decoration
+  next (Application left right decoration) = peek left \leftAst -> Application leftAst right decoration
   next ast = End ast
-
+  peek side cons = into $ intermediate side where
+    into (Intermediate result task) = Intermediate result (task >>> into)
+    into (End sideAst) = intermediate $ cons sideAst
 
 data Intermediate result = End result | Intermediate result (result -> Intermediate result)
 
