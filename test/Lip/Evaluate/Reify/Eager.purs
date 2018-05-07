@@ -18,54 +18,24 @@ test = describe "reify eager" do
   describe "evaluate" $ BooleanTest.test evaluate
   describe "enhance" do
     BooleanTest.test $ enhance id
-    describe "booleans" do
-      let evaluatesTo source result = (enhance globals source) `shouldEqual` (enhance globals source)
-      it "works" do
-        (enhance globals (ref "TRUE")) `shouldEqual` (globals (ref "TRUE"))
-      it "respects 'not' truth table" do
-        ("NOT" ! "TRUE") `evaluatesTo` (ref "FALSE")
-        ("NOT" ! "FALSE") `evaluatesTo` (ref "TRUE")
-      it "respects 'and' truth table" do
-        ("AND" ! "TRUE" ! "TRUE") `evaluatesTo` (ref "TRUE")
-        ("AND" ! "TRUE" ! "FALSE") `evaluatesTo` (ref "FALSE")
-        ("AND" ! "FALSE" ! "TRUE") `evaluatesTo` (ref "FALSE")
-        ("AND" ! "FALSE" ! "FALSE") `evaluatesTo` (ref "FALSE")
-      it "respects 'or' truth table" do
-        ("OR" ! "TRUE" ! "TRUE") `evaluatesTo` (ref "TRUE")
-        ("OR" ! "TRUE" ! "FALSE") `evaluatesTo` (ref "TRUE")
-        ("OR" ! "FALSE" ! "TRUE") `evaluatesTo` (ref "TRUE")
-        ("OR" ! "FALSE" ! "FALSE") `evaluatesTo` (ref "FALSE")
-      it "works with nested" do
-        ("OR" ! ("AND" ! "TRUE" ! "TRUE") ! ("NOT" ! "TRUE")) `evaluatesTo` (ref "TRUE")
+    let evaluatesTo source result = (enhance globals source) `shouldEqual` (enhance globals source)
+    booleanTestSuite evaluatesTo
   describe "stop" do
     BooleanTest.test $ \ast -> (either (const ast) id) (stop Right ast)
     it "stops on ast node" do
       let stopsOn ast result = (stop stops ast) `shouldEqual` result
       (("a" \ "b" \ ("STOP" ! "a")) ! ("x" \ "x") ! ("x" \ "y" \ "y")) `stopsOn` (Left ("x" \ "x"))
+    describe "as enhance" do
+      let se = \ast -> (either (const ast) id) (stop (globals >>> Right) ast)
+      let evaluatesTo source result = (se source) `shouldEqual` (se source)
+      booleanTestSuite evaluatesTo
   describe "step" do
     BooleanTest.test $ (step >>> runStep)
   describe "stepEnhance" do
     BooleanTest.test $ ((stepEnhance id) >>> runStep)
-    describe "booleans" do
-      let se = (stepEnhance globals) >>> runStep
-      let evaluatesTo source result = (se source) `shouldEqual` (se source)
-      it "works" do
-        (se (ref "TRUE")) `shouldEqual` (globals (ref "TRUE"))
-      it "respects 'not' truth table" do
-        ("NOT" ! "TRUE") `evaluatesTo` (ref "FALSE")
-        ("NOT" ! "FALSE") `evaluatesTo` (ref "TRUE")
-      it "respects 'and' truth table" do
-        ("AND" ! "TRUE" ! "TRUE") `evaluatesTo` (ref "TRUE")
-        ("AND" ! "TRUE" ! "FALSE") `evaluatesTo` (ref "FALSE")
-        ("AND" ! "FALSE" ! "TRUE") `evaluatesTo` (ref "FALSE")
-        ("AND" ! "FALSE" ! "FALSE") `evaluatesTo` (ref "FALSE")
-      it "respects 'or' truth table" do
-        ("OR" ! "TRUE" ! "TRUE") `evaluatesTo` (ref "TRUE")
-        ("OR" ! "TRUE" ! "FALSE") `evaluatesTo` (ref "TRUE")
-        ("OR" ! "FALSE" ! "TRUE") `evaluatesTo` (ref "TRUE")
-        ("OR" ! "FALSE" ! "FALSE") `evaluatesTo` (ref "FALSE")
-      it "works with nested" do
-        ("OR" ! ("AND" ! "TRUE" ! "TRUE") ! ("NOT" ! "TRUE")) `evaluatesTo` (ref "TRUE")
+    let se = (stepEnhance globals) >>> runStep
+    let evaluatesTo source result = (se source) `shouldEqual` (se source)
+    booleanTestSuite evaluatesTo
 
 globals :: Evaluate String Unit
 globals ast = case ast of
@@ -80,3 +50,22 @@ stops :: Ast String Unit -> Either (Ast String Unit) (Ast String Unit)
 stops ast = case ast of
   Application (Reference "STOP" _) body _ -> Left body
   _ -> Right ast
+
+booleanTestSuite evaluatesTo = describe "booleans" do
+  it "works" do
+    (enhance globals (ref "TRUE")) `shouldEqual` (globals (ref "TRUE"))
+  it "respects 'not' truth table" do
+    ("NOT" ! "TRUE") `evaluatesTo` (ref "FALSE")
+    ("NOT" ! "FALSE") `evaluatesTo` (ref "TRUE")
+  it "respects 'and' truth table" do
+    ("AND" ! "TRUE" ! "TRUE") `evaluatesTo` (ref "TRUE")
+    ("AND" ! "TRUE" ! "FALSE") `evaluatesTo` (ref "FALSE")
+    ("AND" ! "FALSE" ! "TRUE") `evaluatesTo` (ref "FALSE")
+    ("AND" ! "FALSE" ! "FALSE") `evaluatesTo` (ref "FALSE")
+  it "respects 'or' truth table" do
+    ("OR" ! "TRUE" ! "TRUE") `evaluatesTo` (ref "TRUE")
+    ("OR" ! "TRUE" ! "FALSE") `evaluatesTo` (ref "TRUE")
+    ("OR" ! "FALSE" ! "TRUE") `evaluatesTo` (ref "TRUE")
+    ("OR" ! "FALSE" ! "FALSE") `evaluatesTo` (ref "FALSE")
+  it "works with nested" do
+    ("OR" ! ("AND" ! "TRUE" ! "TRUE") ! ("NOT" ! "TRUE")) `evaluatesTo` (ref "TRUE")
