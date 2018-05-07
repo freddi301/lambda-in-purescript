@@ -96,3 +96,27 @@ stepEnhance enhancer term =
       rightAst <- recursive right
       Continue $ \_ -> recursive $ Application leftAst rightAst decoration
     _ -> Done $ enhancer term
+
+-- | evaluate == intermediate >>> runIntermediate id
+intermediate ::
+  ∀ reference decoration .
+  Eq reference =>
+  Ast reference decoration ->
+  Intermediate (Ast reference decoration)
+intermediate term = Intermediate term next where
+  next (Application (Abstraction head body _) right@(Abstraction _ _ _) _) =
+    intermediate $ reify head right body
+  next (Application left@(Abstraction _ _ _) right decoration) = nextRight $ intermediate right where
+    nextRight (Intermediate result task) = Intermediate result (task >>> nextRight)
+    nextRight (End rightAst) = intermediate $ Application left rightAst decoration
+  next (Application left right decoration) = nextLeft $ intermediate left where
+    nextLeft (Intermediate result task) = Intermediate result (task >>> nextLeft)
+    nextLeft (End leftAst) = intermediate $ Application leftAst right decoration
+  next ast = End ast
+
+
+data Intermediate result = End result | Intermediate result (result -> Intermediate result)
+
+runIntermediate :: ∀ result . (result -> result) -> Intermediate result -> result
+runIntermediate enhancer (End result) = result
+runIntermediate enhancer (Intermediate result next) = runIntermediate enhancer $ next $ enhancer $ result

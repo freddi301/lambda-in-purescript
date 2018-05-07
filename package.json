@@ -4,6 +4,7 @@
   "scripts": {
     "run": "npm run build:syntax && pulp run",
     "build": "pulp build && npm run build:syntax",
+    "build:watch": "pulp -w build && npm run build:syntax",
     "test": "npm run build:syntax && pulp test",
     "test:watch": "npm run build:syntax && pulp -w test",
     "repl": "npm run build:syntax && pulp repl",

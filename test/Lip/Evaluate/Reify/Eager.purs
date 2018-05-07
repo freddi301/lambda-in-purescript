@@ -36,6 +36,11 @@ test = describe "reify eager" do
     let se = (stepEnhance globals) >>> runStep
     let evaluatesTo source result = (se source) `shouldEqual` (se source)
     booleanTestSuite evaluatesTo
+  describe "intermediate" do
+    BooleanTest.test $ (intermediate >>> runIntermediate id)
+    let se = intermediate >>> runIntermediate globals
+    let evaluatesTo source result = (se source) `shouldEqual` (se source)
+    booleanTestSuite evaluatesTo
 
 globals :: Evaluate String Unit
 globals ast = case ast of
@@ -51,9 +56,7 @@ stops ast = case ast of
   Application (Reference "STOP" _) body _ -> Left body
   _ -> Right ast
 
-booleanTestSuite evaluatesTo = describe "booleans" do
-  it "works" do
-    (enhance globals (ref "TRUE")) `shouldEqual` (globals (ref "TRUE"))
+booleanTestSuite evaluatesTo = describe "booleans enhanced" do
   it "respects 'not' truth table" do
     ("NOT" ! "TRUE") `evaluatesTo` (ref "FALSE")
     ("NOT" ! "FALSE") `evaluatesTo` (ref "TRUE")
