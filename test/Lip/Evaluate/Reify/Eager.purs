@@ -41,6 +41,22 @@ test = describe "reify eager" do
     let se = intermediate >>> runIntermediate globals
     let evaluatesTo source result = (se source) `shouldEqual` (se source)
     booleanTestSuite evaluatesTo
+    it "steps" do
+      let sample = (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
+      let inte = getResult >>> shouldEqual
+      let step1 = intermediate sample
+      inte step1 $ (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
+      let step2 = nextInter step1
+      inte step2 $ (("x" \ "x") ! ("y" \ "y"))
+      let step3 = nextInter step2
+      inte step3 $ ("y" \ "y")
+      let step4 = nextInter step3
+      inte step4 $ ("y" \ "y") ! ("z" \ "z")
+      let step5 = nextInter step4
+      inte step5 ("z" \ "z")
+      let step6 = nextInter step5
+      step6 `shouldEqual` (End ("z" \ "z"))
+      
 
 globals :: Evaluate String Unit
 globals ast = case ast of
@@ -55,6 +71,9 @@ stops :: Ast String Unit -> Either (Ast String Unit) (Ast String Unit)
 stops ast = case ast of
   Application (Reference "STOP" _) body _ -> Left body
   _ -> Right ast
+
+nextInter (End result) = (End result)
+nextInter (Intermediate result task) = task result
 
 booleanTestSuite evaluatesTo = describe "booleans enhanced" do
   it "respects 'not' truth table" do

@@ -9,6 +9,7 @@
     "test:watch": "npm run build:syntax && pulp -w test",
     "repl": "npm run build:syntax && pulp repl",
     "docs": "pulp docs",
+    "docs:html":  "pulp docs -- --format html",
     "precommit": "npm test",
     "postinstall": "bower install",
     "prepublish": "npm run build",
