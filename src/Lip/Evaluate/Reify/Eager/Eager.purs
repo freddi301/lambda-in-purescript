@@ -65,7 +65,7 @@ data Step result = Done result | Continue (Unit -> Step result)
 
 instance bindStep :: Bind Step where
   bind (Done result) next = next result
-  bind (Continue task) next = bind (task unit) next
+  bind (Continue task) next = Continue \_ -> bind (task unit) next
 
 instance applyStep :: Apply Step where
   apply (Done f) step = map f step
@@ -131,3 +131,21 @@ getResult (Intermediate result _) = result
 runIntermediate :: ∀ result . (result -> result) -> Intermediate result -> result
 runIntermediate enhancer (End result) = result
 runIntermediate enhancer (Intermediate result next) = runIntermediate enhancer $ next $ enhancer $ result
+
+
+type Debuggable reference decoration container = Bind container => Eq reference =>
+  (Ast reference decoration -> (container (Ast reference decoration))) -> 
+  (Ast reference decoration -> (container (Ast reference decoration))) -> 
+  (Ast reference decoration) ->
+  (container (Ast reference decoration))
+
+eager :: ∀ r d c . Debuggable r d c
+eager rec done term = case term of
+  Application (Abstraction head body _) right@(Abstraction _ _ _) _ ->
+    rec $ reify head right body
+  Application left right decoration -> do
+    left <- rec left
+    right <- rec right
+    rec $ Application left right decoration
+  _ ->
+    done $ term

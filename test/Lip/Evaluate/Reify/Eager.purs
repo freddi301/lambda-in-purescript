@@ -47,7 +47,7 @@ test = describe "reify eager" do
       let step1 = intermediate sample
       inte step1 $ (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
       let step2 = nextInter step1
-      inte step2 $ (("x" \ "x") ! ("y" \ "y"))
+      inte step2 $ ("x" \ "x") ! ("y" \ "y")
       let step3 = nextInter step2
       inte step3 $ ("y" \ "y")
       let step4 = nextInter step3
