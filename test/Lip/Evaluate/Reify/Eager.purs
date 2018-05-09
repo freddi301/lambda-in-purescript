@@ -15,10 +15,11 @@ import Test.Spec.Runner (RunnerEffects)
 
 test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "reify eager" do
+  testGlobals
   describe "evaluate" $ BooleanTest.test evaluate
   describe "enhance" do
     BooleanTest.test $ enhance id
-    let evaluatesTo source result = (enhance globals source) `shouldEqual` (enhance globals source)
+    let evaluatesTo source result = (enhance globals source) `shouldEqual` (enhance globals result)
     booleanTestSuite evaluatesTo
   describe "stop" do
     BooleanTest.test $ \ast -> (either (const ast) id) (stop Right ast)
@@ -27,19 +28,19 @@ test = describe "reify eager" do
       (("a" \ "b" \ ("STOP" ! "a")) ! ("x" \ "x") ! ("x" \ "y" \ "y")) `stopsOn` (Left ("x" \ "x"))
     describe "as enhance" do
       let se = \ast -> (either (const ast) id) (stop (globals >>> Right) ast)
-      let evaluatesTo source result = (se source) `shouldEqual` (se source)
+      let evaluatesTo source result = (se source) `shouldEqual` (se result)
       booleanTestSuite evaluatesTo
   describe "step" do
     BooleanTest.test $ (step >>> runStep)
   describe "stepEnhance" do
     BooleanTest.test $ ((stepEnhance id) >>> runStep)
     let se = (stepEnhance globals) >>> runStep
-    let evaluatesTo source result = (se source) `shouldEqual` (se source)
+    let evaluatesTo source result = (se source) `shouldEqual` (se result)
     booleanTestSuite evaluatesTo
   describe "intermediate" do
     BooleanTest.test $ (intermediate >>> runIntermediate id)
     let se = intermediate >>> runIntermediate globals
-    let evaluatesTo source result = (se source) `shouldEqual` (se source)
+    let evaluatesTo source result = (se source) `shouldEqual` (se result)
     booleanTestSuite evaluatesTo
     it "steps" do
       let sample = (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
@@ -57,6 +58,10 @@ test = describe "reify eager" do
       let step6 = nextInter step5
       step6 `shouldEqual` (End ("z" \ "z"))
       
+testGlobals = describe "globals" do
+  it "works" do
+    (globals (ref "TRUE")) `shouldEqual` ("x" \ "y" \ "x")
+    (globals (ref "u")) `shouldEqual` (ref "u")
 
 globals :: Evaluate String Unit
 globals ast = case ast of
@@ -64,7 +69,7 @@ globals ast = case ast of
   Reference "FALSE" _ -> "x" \ "y" \ "y"
   Reference "NOT" _ -> "p" \ "p" ! "FALSE" ! "TRUE"
   Reference "AND" _ -> "a" \ "b" \ "a" ! "b" ! "FALSE"
-  Reference "OR" _ -> "a" \ "b" \ "a" ! "FALSE" ! "b"
+  Reference "OR" _ -> "a" \ "b" \ "a" ! "TRUE" ! "b"
   _ -> ast
 
 stops :: Ast String Unit -> Either (Ast String Unit) (Ast String Unit)
