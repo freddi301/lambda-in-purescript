@@ -133,19 +133,28 @@ runIntermediate enhancer (End result) = result
 runIntermediate enhancer (Intermediate result next) = runIntermediate enhancer $ next $ enhancer $ result
 
 
-type Debuggable reference decoration container = Bind container => Eq reference =>
-  (Ast reference decoration -> (container (Ast reference decoration))) -> 
-  (Ast reference decoration -> (container (Ast reference decoration))) -> 
-  (Ast reference decoration) ->
-  (container (Ast reference decoration))
+type Pauseable container content = {
+  recursive :: content -> container content,
+  done :: content -> container content,
+  wait :: container content -> (content -> container content) -> container content
+  } -> content -> container content
 
-eager :: ∀ r d c . Debuggable r d c
-eager rec done term = case term of
+eager :: ∀ container reference decoration . Eq reference => Pauseable container (Ast reference decoration)
+eager { recursive, done, wait } term = case term of
   Application (Abstraction head body _) right@(Abstraction _ _ _) _ ->
-    rec $ reify head right body
-  Application left right decoration -> do
-    left <- rec left
-    right <- rec right
-    rec $ Application left right decoration
-  _ ->
-    done $ term
+    recursive $ reify head right body
+  Application left right decoration ->
+    wait (recursive left) \leftAst ->
+    wait (recursive right) \rightAst ->
+    recursive $ Application leftAst rightAst decoration
+  term -> done $ term
+
+pauseIntermediate :: ∀ content .
+  Pauseable Intermediate content ->
+  content -> Intermediate content
+pauseIntermediate pauseable = recursive where
+  recursive term = End term --Intermediate term (pauseable { recursive, done, wait })
+  done = End
+  wait (Intermediate result task) next = Intermediate result (task >>> next)
+  wait (End result) next = (End result) -- next result
+ 
