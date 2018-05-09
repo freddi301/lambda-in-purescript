@@ -186,25 +186,25 @@ test = describe "Evaluate" do
           re (idenityInIdentity) `shouldEqual` ("x" \ "x")
           re ("y" \ ("x" \ "x") ! "y") `shouldEqual` ("x" \ "x")
           re ("x" \ ("x" \ "x") ! "x") `shouldEqual` ("x" \ "x")
-        it "works for x => y => (x => x) x" do
+        it "works for x ⇒ y ⇒ (x ⇒ x) x" do
           re ("x" \ "y" \ (("x" \ "x") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
-        it "works for x => y => (y => y) x" do
+        it "works for x ⇒ y ⇒ (y ⇒ y) x" do
           re ("x" \ "y" \ (("y" \ "y") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
-        it "works for x => y => (z => z) x" do
+        it "works for x ⇒ y ⇒ (z ⇒ z) x" do
           re ("x" \ "y" \ (("z" \ "z") ! "x")) `shouldEqual` ("x" \ "y" \ "x")
-        it "works for x => y => (x => x) y" do
+        it "works for x ⇒ y ⇒ (x ⇒ x) y" do
           re ("x" \ "y" \ (("x" \ "x") ! "y")) `shouldEqual` ("x" \ "x" \ "x")
-        it "works for x => y => (y => x) y" do
+        it "works for x ⇒ y ⇒ (y ⇒ x) y" do
           re ("x" \ "y" \ (("y" \ "y") ! "y")) `shouldEqual` ("x" \ "y" \ "y")
-        it "works for x => y => (z => z) y" do
+        it "works for x ⇒ y ⇒ (z ⇒ z) y" do
           re ("x" \ "y" \ (("z" \ "z") ! "y")) `shouldEqual` ("x" \ "z" \ "z")
-        it "works for x => y => x ((z => z) y)" do
+        it "works for x ⇒ y ⇒ x ((z ⇒ z) y)" do
           re ("x" \ "y" \ ("x" ! (("z" \ "z") ! "y"))) `shouldEqual` ("x" \ "y" \ ("x" ! "y"))
-        it "works for x => y => x (z => z) y" do
+        it "works for x ⇒ y ⇒ x (z ⇒ z) y" do
           re ("x" \ "y" \ (("x" ! ("z" \ "z")) ! "y")) `shouldEqual` ("x" \ (("x" ! ("z" \ "z"))))
-        it "works for x => y => x ((z => w => z) y)" do
+        it "works for x ⇒ y ⇒ x ((z ⇒ w ⇒ z) y)" do
           re ("x" \ "y" \ ("x" ! (("z" \ "w" \ "z") ! "y"))) `shouldEqual` ("x" \ "y" \ ("x" ! ("w" \ "y")))
-        it "ηConversion works for x => f x" do
+        it "ηConversion works for x ⇒ f x" do
           re ("x" \ ("f" ! "x")) `shouldEqual` (Reference "f" unit)
           ηConversion ("x" \ ("f" ! "x")) `shouldEqual` (Reference "f" unit)
       describe "program checks" do

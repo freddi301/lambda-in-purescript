@@ -13,20 +13,20 @@ test :: ∀ e . Spec (RunnerEffects e) Unit
 test = describe "infere" do
   let inf ast = infere { ast: (const {}) <$> ast, nextType: 0, typScope: Map.empty, constraints: Map.empty }
   let testit ast typ constraints = let result = inf ast in (shouldEqual result.typ typ) >>= const (shouldEqual result.constraints constraints)
-  it "x => x is 0 = 1 -> 1" do
+  it "x ⇒ x is 0 = 1 → 1" do
     let result = inf ("x" \ "x")
     result.typ `shouldEqual` 0
     (Map.lookup result.typ result.constraints) `shouldEqual` (Maybe.Just $ [IsAbstraction 1 1])
-  it "x => y is 0 = 1 -> 2" do
+  it "x ⇒ y is 0 = 1 → 2" do
     let result = inf ("x" \ "y")
     result.typ `shouldEqual` 0
     (Map.lookup result.typ result.constraints) `shouldEqual` (Maybe.Just $ [IsAbstraction 1 2])
-  it "x => y => x is 0 = 1 -> 3 -> 1" do
+  it "x ⇒ y ⇒ x is 0 = 1 → 3 → 1" do
     let result = inf ("x" \ "y" \ "x")
     result.typ `shouldEqual` 0
     (Map.lookup result.typ result.constraints) `shouldEqual` (Maybe.Just $ [IsAbstraction 1 2])
     (Map.lookup 2 result.constraints) `shouldEqual` (Maybe.Just $ [IsAbstraction 3 1])
-  it "x => y => y is 0 = 1 -> 3 -> 3" do
+  it "x ⇒ y ⇒ y is 0 = 1 → 3 → 3" do
     let result = inf ("x" \ "y" \ "y")
     result.typ `shouldEqual` 0
     (Map.lookup result.typ result.constraints) `shouldEqual` (Maybe.Just $ [IsAbstraction 1 2])

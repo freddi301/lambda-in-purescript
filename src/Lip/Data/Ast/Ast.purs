@@ -10,9 +10,9 @@ data Ast reference decoration
   | Application (Ast reference decoration) (Ast reference decoration) decoration
   | Abstraction reference (Ast reference decoration) decoration
 
-derive instance eqAst :: (Eq reference, Eq decoration) => Eq (Ast reference decoration)
+derive instance eqAst :: (Eq reference, Eq decoration) ⇒ Eq (Ast reference decoration)
 
-instance showAst :: (Show reference, Show decoration) => Show (Ast reference decoration) where
+instance showAst :: (Show reference, Show decoration) ⇒ Show (Ast reference decoration) where
   show (Reference name decoration) = show name <> "[" <> show decoration <> "]"
   show (Application left right decoration) = "(" <> show left <> " " <> show right <> ")" <> "[" <> show decoration <> "]" 
-  show (Abstraction head body decoration) = "(" <> show head <> " => " <> show body <> ")" <> "[" <> show decoration <> "]"
+  show (Abstraction head body decoration) = "(" <> show head <> " ⇒ " <> show body <> ")" <> "[" <> show decoration <> "]"

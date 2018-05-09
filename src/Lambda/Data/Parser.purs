@@ -20,8 +20,8 @@ instance showBlock :: Show Block where show (Block line block) = show line <> " 
 derive instance eqBlock :: Eq Block
 
 data Named reference decoration = Named reference decoration (Ast reference decoration)
-derive instance eqNamed :: (Eq reference, Eq decoration) => Eq (Named reference decoration)
-instance showNamed :: (Show reference, Show decoration) => Show (Named reference decoration) where
+derive instance eqNamed :: (Eq reference, Eq decoration) ⇒ Eq (Named reference decoration)
+instance showNamed :: (Show reference, Show decoration) ⇒ Show (Named reference decoration) where
   show (Named name decoration ast) = show name <> "[" <> show decoration <> "]" <> " = " <> show ast
 instance functorNamed :: Functor (Named reference) where
   map f (Named name decoration ast) = Named name (f decoration) (f <$> ast)

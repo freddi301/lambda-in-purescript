@@ -13,5 +13,5 @@ instance showPosition :: Show Position where
     show startLine <> ":" <> show startColumn <> "-" <> show endLine <> ":" <> show endColumn
   show NoPosition = ":-:"
 
-pos :: Int -> Int -> Int -> Int -> Position
+pos :: Int → Int → Int → Int → Position
 pos startLine startColumn endLine endColumn = Position { startLine, startColumn, endLine, endColumn }

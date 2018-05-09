@@ -6,6 +6,7 @@ import Prelude
 
 import Lip.Data.Ast (Ast(..))
 import Lip.Data.Ast.Helpers ((\), (!), ref)
+import Lip.Evaluate.Reify.Pauseable as Pauseable
 import Lip.Evaluate (Evaluate)
 import Prelude (Unit, unit, discard, (>>>))
 import Test.Lip.Evaluate.Boolean as BooleanTest
@@ -22,25 +23,25 @@ test = describe "reify eager" do
     let evaluatesTo source result = (enhance globals source) `shouldEqual` (enhance globals result)
     booleanTestSuite evaluatesTo
   describe "stop" do
-    BooleanTest.test $ \ast -> (either (const ast) id) (stop Right ast)
+    BooleanTest.test $ \ast → (either (const ast) id) (stop Right ast)
     it "stops on ast node" do
       let stopsOn ast result = (stop stops ast) `shouldEqual` result
       (("a" \ "b" \ ("STOP" ! "a")) ! ("x" \ "x") ! ("x" \ "y" \ "y")) `stopsOn` (Left ("x" \ "x"))
     describe "as enhance" do
-      let se = \ast -> (either (const ast) id) (stop (globals >>> Right) ast)
-      let evaluatesTo source result = (se source) `shouldEqual` (se result)
+      let se = \ast → (either (const ast) id) (stop (globals >>> Right) ast)
+      let evaluatesTo source result = (se source) `shouldEqual` (globals result)
       booleanTestSuite evaluatesTo
   describe "step" do
     BooleanTest.test $ (step >>> runStep)
   describe "stepEnhance" do
     BooleanTest.test $ ((stepEnhance id) >>> runStep)
     let se = (stepEnhance globals) >>> runStep
-    let evaluatesTo source result = (se source) `shouldEqual` (se result)
+    let evaluatesTo source result = (se source) `shouldEqual` (globals result)
     booleanTestSuite evaluatesTo
   describe "intermediate" do
     BooleanTest.test $ (intermediate >>> runIntermediate id)
     let se = intermediate >>> runIntermediate globals
-    let evaluatesTo source result = (se source) `shouldEqual` (se result)
+    let evaluatesTo source result = (se source) `shouldEqual` (globals result)
     booleanTestSuite evaluatesTo
     it "steps" do
       let sample = (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
@@ -57,6 +58,44 @@ test = describe "reify eager" do
       inte step5 ("z" \ "z")
       let step6 = nextInter step5
       step6 `shouldEqual` (End ("z" \ "z"))
+  describe "puaseable eager" do
+    BooleanTest.test $ (Pauseable.eager >>> Pauseable.runIntermediate id)
+    let se = Pauseable.eager >>> Pauseable.runIntermediate globals
+    let evaluatesTo source result = (se source) `shouldEqual` (globals result)
+    booleanTestSuite evaluatesTo
+    it "steps" do
+      let sample = (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
+      let inte = Pauseable.getResult >>> shouldEqual
+      let step1 = Pauseable.eager sample
+      inte step1 $ ("x" \ "x") ! ("y" \ "y")
+      let step2 = Pauseable.next step1
+      inte step2 $ ("y" \ "y")
+      let step3 = Pauseable.next step2
+      inte step3 $ ("z" \ "z")
+      let step4 = Pauseable.next step3
+      inte step4 $ ("y" \ "y") ! ("z" \ "z")
+      let step5 = Pauseable.next step4
+      inte step5 ("z" \ "z")
+      let step6 = Pauseable.next step5
+      step6 `shouldEqual` (Pauseable.End ("z" \ "z"))
+  describe "puaseable lazy" do
+    BooleanTest.test $ (Pauseable.lazy >>> Pauseable.runIntermediate id)
+    let se = Pauseable.lazy >>> Pauseable.runIntermediate globals
+    let evaluatesTo source result = (se source) `shouldEqual` (globals result)
+    booleanTestSuite evaluatesTo
+    it "steps" do
+      let sample = (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
+      let inte = Pauseable.getResult >>> shouldEqual
+      let step1 = Pauseable.lazy sample
+      inte step1 $ ("x" \ "x") ! ("y" \ "y")
+      let step2 = Pauseable.next step1
+      inte step2 $ ("y" \ "y")
+      let step3 = Pauseable.next step2
+      inte step3 $ ("y" \ "y") ! ("z" \ "z")
+      let step4 = Pauseable.next step3
+      inte step4 $ ("z" \ "z")
+      let step5 = Pauseable.next step4
+      step5 `shouldEqual` (Pauseable.End ("z" \ "z"))
       
 testGlobals = describe "globals" do
   it "works" do
@@ -65,17 +104,17 @@ testGlobals = describe "globals" do
 
 globals :: Evaluate String Unit
 globals ast = case ast of
-  Reference "TRUE" _ -> "x" \ "y" \ "x"
-  Reference "FALSE" _ -> "x" \ "y" \ "y"
-  Reference "NOT" _ -> "p" \ "p" ! "FALSE" ! "TRUE"
-  Reference "AND" _ -> "a" \ "b" \ "a" ! "b" ! "FALSE"
-  Reference "OR" _ -> "a" \ "b" \ "a" ! "TRUE" ! "b"
-  _ -> ast
+  Reference "TRUE" _ → "x" \ "y" \ "x"
+  Reference "FALSE" _ → "x" \ "y" \ "y"
+  Reference "NOT" _ → "p" \ "p" ! "FALSE" ! "TRUE"
+  Reference "AND" _ → "a" \ "b" \ "a" ! "b" ! "FALSE"
+  Reference "OR" _ → "a" \ "b" \ "a" ! "TRUE" ! "b"
+  _ → ast
 
-stops :: Ast String Unit -> Either (Ast String Unit) (Ast String Unit)
+stops :: Ast String Unit → Either (Ast String Unit) (Ast String Unit)
 stops ast = case ast of
-  Application (Reference "STOP" _) body _ -> Left body
-  _ -> Right ast
+  Application (Reference "STOP" _) body _ → Left body
+  _ → Right ast
 
 nextInter (End result) = (End result)
 nextInter (Intermediate result task) = task result
