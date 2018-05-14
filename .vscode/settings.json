@@ -2,5 +2,5 @@
   "editor.tabSize": 2,
   "purescript.pscIdeServerExe": "purs ide server",
   "purescript.addNpmPath": true,
-  "purescript.censorWarnings": ["MissingTypeDeclaration"]
+  "purescript.censorWarnings": []
 }

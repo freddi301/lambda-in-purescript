@@ -1,16 +1,17 @@
 module Test.Lip.Evaluate.Reify.Eager where
 
-import Data.Either
-import Lip.Evaluate.Reify.Eager
 import Prelude
 
+import Control.Monad.Aff (Aff)
+import Data.Either (Either(..), either)
 import Lip.Data.Ast (Ast(..))
 import Lip.Data.Ast.Helpers ((\), (!), ref)
-import Lip.Evaluate.Reify.Pauseable as Pauseable
 import Lip.Evaluate (Evaluate)
-import Prelude (Unit, unit, discard, (>>>))
+import Lip.Evaluate.Pauseable as Pauseable
+import Lip.Evaluate.Reify.Eager (Intermediate(..), enhance, evaluate, getResult, intermediate, runIntermediate, runStep, step, stepEnhance, stop)
+import Lip.Evaluate.Reify.Pauseable as ReifyPauseable
 import Test.Lip.Evaluate.Boolean as BooleanTest
-import Test.Spec (Spec, describe, it, pending)
+import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
@@ -59,14 +60,14 @@ test = describe "reify eager" do
       let step6 = nextInter step5
       step6 `shouldEqual` (End ("z" \ "z"))
   describe "puaseable eager" do
-    BooleanTest.test $ (Pauseable.eager >>> Pauseable.runIntermediate id)
-    let se = Pauseable.eager >>> Pauseable.runIntermediate globals
+    BooleanTest.test $ (ReifyPauseable.eager >>> Pauseable.runIntermediate id)
+    let se = ReifyPauseable.eager >>> Pauseable.runIntermediate globals
     let evaluatesTo source result = (se source) `shouldEqual` (globals result)
     booleanTestSuite evaluatesTo
     it "steps" do
       let sample = (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
       let inte = Pauseable.getResult >>> shouldEqual
-      let step1 = Pauseable.eager sample
+      let step1 = ReifyPauseable.eager sample
       inte step1 $ ("x" \ "x") ! ("y" \ "y")
       let step2 = Pauseable.next step1
       inte step2 $ ("y" \ "y")
@@ -79,14 +80,14 @@ test = describe "reify eager" do
       let step6 = Pauseable.next step5
       step6 `shouldEqual` (Pauseable.End ("z" \ "z"))
   describe "puaseable lazy" do
-    BooleanTest.test $ (Pauseable.lazy >>> Pauseable.runIntermediate id)
-    let se = Pauseable.lazy >>> Pauseable.runIntermediate globals
+    BooleanTest.test $ (ReifyPauseable.lazy >>> Pauseable.runIntermediate id)
+    let se = ReifyPauseable.lazy >>> Pauseable.runIntermediate globals
     let evaluatesTo source result = (se source) `shouldEqual` (globals result)
     booleanTestSuite evaluatesTo
     it "steps" do
       let sample = (("x" \ "x") ! ("y" \ "y")) ! ("z" \ "z")
       let inte = Pauseable.getResult >>> shouldEqual
-      let step1 = Pauseable.lazy sample
+      let step1 = ReifyPauseable.lazy sample
       inte step1 $ ("x" \ "x") ! ("y" \ "y")
       let step2 = Pauseable.next step1
       inte step2 $ ("y" \ "y")
@@ -96,7 +97,8 @@ test = describe "reify eager" do
       inte step4 $ ("z" \ "z")
       let step5 = Pauseable.next step4
       step5 `shouldEqual` (Pauseable.End ("z" \ "z"))
-      
+
+testGlobals :: ∀ e . Spec (RunnerEffects e) Unit     
 testGlobals = describe "globals" do
   it "works" do
     (globals (ref "TRUE")) `shouldEqual` ("x" \ "y" \ "x")
@@ -116,9 +118,11 @@ stops ast = case ast of
   Application (Reference "STOP" _) body _ → Left body
   _ → Right ast
 
+nextInter :: ∀ result . Intermediate result -> Intermediate result
 nextInter (End result) = (End result)
 nextInter (Intermediate result task) = task result
 
+booleanTestSuite :: ∀ e . (Ast String Unit -> Ast String Unit -> Aff (RunnerEffects e) Unit) -> Spec (RunnerEffects e) Unit   
 booleanTestSuite evaluatesTo = describe "booleans enhanced" do
   it "respects 'not' truth table" do
     ("NOT" ! "TRUE") `evaluatesTo` (ref "FALSE")
