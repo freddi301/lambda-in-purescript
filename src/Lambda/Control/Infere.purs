@@ -5,7 +5,7 @@ import Data.Map as Map
 import Data.Maybe as Maybe
 import Data.Ord as Ord
 import Lambda.Data.Ast (Ast(..))
-import Prelude (class Eq, class Show, show, (+), (<>), map, ($))
+import Prelude (class Eq, class Show, show, (+), (<>), map)
 import Data.Record (unionMerge)
 
 infere :: ∀ reference decoration . Ord.Ord reference ⇒

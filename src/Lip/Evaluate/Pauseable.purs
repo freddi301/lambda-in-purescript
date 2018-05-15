@@ -17,6 +17,7 @@ getResult :: ∀ result . Intermediate result → result
 getResult (End result) = result
 getResult (Intermediate result _) = result
 
+next :: ∀ result . Intermediate result → Intermediate result
 next (End result) = (End result)
 next (Intermediate result task) = task result
 
