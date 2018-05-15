@@ -6,12 +6,13 @@ import Control.Monad.Aff (Aff)
 import Data.Either (Either(..), either)
 import Lip.Data.Ast (Ast(..))
 import Lip.Data.Ast.Helpers ((\), (!), ref)
+import Lip.Data.Ast.Reference as MapReference
 import Lip.Evaluate (Evaluate)
 import Lip.Evaluate.Pauseable as Pauseable
 import Lip.Evaluate.Reify.Eager (Intermediate(..), enhance, evaluate, getResult, intermediate, runIntermediate, runStep, step, stepEnhance, stop)
 import Lip.Evaluate.Reify.Pauseable as ReifyPauseable
 import Test.Lip.Evaluate.Boolean as BooleanTest
-import Test.Spec (Spec, describe, it)
+import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
@@ -97,6 +98,14 @@ test = describe "reify eager" do
       inte step4 $ ("z" \ "z")
       let step5 = Pauseable.next step4
       step5 `shouldEqual` (Pauseable.End ("z" \ "z"))
+  describe "puaseable symbolic" do
+    let lift = MapReference.map (\name -> (ReifyPauseable.Symbol name 0))
+    let symbolic = ReifyPauseable.symbolic 0
+    let unlift = MapReference.map (\ref -> case ref of (ReifyPauseable.Symbol name _) -> name)
+    BooleanTest.test (lift >>> symbolic >>> (Pauseable.runIntermediate id) >>> unlift)
+    let se = lift >>> symbolic >>> (Pauseable.runIntermediate id) >>> unlift
+    let evaluatesTo source result = (se source) `shouldEqual` (globals result)
+    pending "booleanTestSuite evaluatesTo"
 
 testGlobals :: ∀ e . Spec (RunnerEffects e) Unit     
 testGlobals = describe "globals" do
