@@ -13,7 +13,7 @@ import Test.Lip.Parser.Parser1 as Parser1
 import Test.Spec.Reporter.Console (consoleReporter)
 import Test.Spec.Runner (RunnerEffects, run)
 
-main :: Eff (RunnerEffects ()) Unit
+main ∷ Eff (RunnerEffects ()) Unit
 main = run [consoleReporter] do
   Ast.test
   Evaluate.test

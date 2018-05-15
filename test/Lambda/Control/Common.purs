@@ -8,7 +8,7 @@ import Prelude (Unit, discard)
 import Test.Lambda.Data.Common (u, y, z)
 import Lambda.Data.Ast
 
-test :: ∀ e . Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Common" do
   describe "U fixed point combinator" do
     it "works eager" do

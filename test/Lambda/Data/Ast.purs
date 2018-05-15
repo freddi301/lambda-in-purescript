@@ -8,7 +8,7 @@ import Test.Spec.Assertions (shouldEqual)
 
 import Lambda.Data.Ast (Ast(..), prettyPrint, αConversion, (!), (\))
 
-test :: ∀ e . Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Ast" do
   describe "show" do
     it "works" do

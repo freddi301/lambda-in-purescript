@@ -10,14 +10,14 @@ import Lip.Evaluate.Reify (reify)
 -- | `evaluate` evaluates a lambda term using the reify mechanism,
 -- | the execution is eager,
 -- | there is no scope, as soon variable gets bound, every occurrence is substituted with its value.
-evaluate :: ∀ reference decoration . Eq reference ⇒ Evaluate reference decoration
+evaluate ∷ ∀ reference decoration . Eq reference ⇒ Evaluate reference decoration
 evaluate term = case term of
   Application (Abstraction head body _) right@(Abstraction _ _ _) _ → evaluate $ reify head right body
   Application left right decoration → evaluate $ Application (evaluate left) (evaluate right) decoration
   _ → term
 
 -- | evaluate == enhance id
-enhance ::
+enhance ∷
   ∀ reference decoration . Eq reference ⇒
   Evaluate reference decoration →
   Evaluate reference decoration
@@ -29,7 +29,7 @@ enhance enhancer term =
     term → term
 
 -- | evaluate == (stop Right) >>> fromRight
-stop ::
+stop ∷
   ∀ reference decoration inspection .
   Eq reference ⇒ 
   (Ast reference decoration → Either inspection (Ast reference decoration)) →
@@ -47,7 +47,7 @@ stop inspect term = do
     _ → inspect term
 
 -- | evaluate == step >>> runStep
-step ::
+step ∷
   ∀ reference decoration .
   Eq reference ⇒
   Ast reference decoration →
@@ -63,24 +63,24 @@ step term = case term of
 
 data Step result = Done result | Continue (Unit → Step result)
 
-instance bindStep :: Bind Step where
+instance bindStep ∷ Bind Step where
   bind (Done result) next = next result
   bind (Continue task) next = Continue \_ → bind (task unit) next
 
-instance applyStep :: Apply Step where
+instance applyStep ∷ Apply Step where
   apply (Done f) step = map f step
   apply (Continue task) step = Continue $ \_ → apply (task unit) step
 
-instance functorStep :: Functor Step where
+instance functorStep ∷ Functor Step where
   map f (Done result) = Done $ f result
   map f (Continue task) = Continue $ \_ → map f $ task unit
 
-runStep :: ∀ result . Step result → result
+runStep ∷ ∀ result . Step result → result
 runStep (Done result) = result
 runStep (Continue task) = runStep $ task unit
 
 -- | evaluate == (stepEnhance id) >>> runStep
-stepEnhance ::
+stepEnhance ∷
   ∀ reference decoration .
   Eq reference ⇒
   Evaluate reference decoration →
@@ -98,7 +98,7 @@ stepEnhance enhancer term =
     _ → Done $ enhancer term
 
 -- | evaluate == intermediate >>> runIntermediate id
-intermediate ::
+intermediate ∷
   ∀ reference decoration .
   Eq reference ⇒
   Ast reference decoration →
@@ -115,19 +115,19 @@ intermediate term = Intermediate term next where
 
 data Intermediate result = End result | Intermediate result (result → Intermediate result)
 
-instance showIntermediate :: Show result ⇒ Show (Intermediate result) where
+instance showIntermediate ∷ Show result ⇒ Show (Intermediate result) where
   show (End result) = show "End " <> show result
   show (Intermediate result _) = show "Intermediate " <> show result
 
-instance eqIntermediate :: Eq result ⇒ Eq (Intermediate result) where
+instance eqIntermediate ∷ Eq result ⇒ Eq (Intermediate result) where
   eq (End a) (End b) = a == b
   eq a@(Intermediate ar at) b@(Intermediate br bt) = (ar == br) && ((runIntermediate id a) == (runIntermediate id b))
   eq _ _ = false
 
-getResult :: ∀ result . Intermediate result → result
+getResult ∷ ∀ result . Intermediate result → result
 getResult (End result) = result
 getResult (Intermediate result _) = result
 
-runIntermediate :: ∀ result . (result → result) → Intermediate result → result
+runIntermediate ∷ ∀ result . (result → result) → Intermediate result → result
 runIntermediate enhancer (End result) = result
 runIntermediate enhancer (Intermediate result next) = runIntermediate enhancer $ next $ enhancer $ result

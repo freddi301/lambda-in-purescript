@@ -8,9 +8,9 @@ import Lambda.Data.Ast (Ast(..))
 import Prelude (class Eq, class Show, show, (+), (<>), map)
 import Data.Record (unionMerge)
 
-infere :: ∀ reference decoration . Ord.Ord reference ⇒
-  { ast :: Ast reference { | decoration }, nextType :: Int, typScope :: Map.Map reference Int, constraints :: Constraints } →
-  { typ :: Int, nextType :: Int, constraints :: Constraints, ast :: Ast reference { typ :: Int | decoration } }
+infere ∷ ∀ reference decoration . Ord.Ord reference ⇒
+  { ast ∷ Ast reference { | decoration }, nextType ∷ Int, typScope ∷ Map.Map reference Int, constraints ∷ Constraints } →
+  { typ ∷ Int, nextType ∷ Int, constraints ∷ Constraints, ast ∷ Ast reference { typ ∷ Int | decoration } }
 infere { ast, nextType, typScope, constraints } = case ast of
   Reference name decoration → case Map.lookup name typScope of
     Maybe.Just typ → { typ, nextType, constraints, ast: Reference name (unionMerge decoration { typ }) }
@@ -35,18 +35,18 @@ infere { ast, nextType, typScope, constraints } = case ast of
 -- | TODO: add user definable constraints
 
 data Constraint = IsAbstraction Int Int -- | IsEqual Int Int
-instance showContraint :: Show Constraint where show (IsAbstraction head body) = show head <> " → " <> show body
-derive instance eqConstraint :: Eq Constraint
+instance showContraint ∷ Show Constraint where show (IsAbstraction head body) = show head <> " → " <> show body
+derive instance eqConstraint ∷ Eq Constraint
 
 type Constraints = Map.Map Int (Array Constraint)
 
-addConstraint :: Int → Constraint → Constraints → Constraints
+addConstraint ∷ Int → Constraint → Constraints → Constraints
 addConstraint typ constraint constraints =
   case Map.lookup typ constraints of
     Maybe.Nothing → Map.insert typ (Array.singleton constraint) constraints
     Maybe.Just cons → Map.insert typ (Array.cons constraint cons) constraints
 
-showType :: Constraints → Int → String
+showType ∷ Constraints → Int → String
 showType constraints typ = case Map.lookup typ constraints of
   Maybe.Nothing → show typ
   Maybe.Just [cons] → case cons of

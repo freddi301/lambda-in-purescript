@@ -9,7 +9,7 @@ import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
-test :: ∀ e . Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Parse" do
   describe "parseUnit" do
     let check string ast = shouldEqual (parseUnit string) ast

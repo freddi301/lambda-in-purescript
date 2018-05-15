@@ -13,19 +13,19 @@ import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (fail, shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
-infere ::
+infere ∷
   ∀ reference decoration . 
   Ord reference ⇒ 
   Ast reference decoration → 
-  { typ :: Int, nextType :: Int, constraints :: Infere.Constraints, ast :: Ast reference { typ :: Int } }
+  { typ ∷ Int, nextType ∷ Int, constraints ∷ Infere.Constraints, ast ∷ Ast reference { typ ∷ Int } }
 infere ast = Infere.infere { ast: AstDecoration.map (const {}) ast, nextType: 0, typScope: Map.empty, constraints: Map.empty } 
 
-re :: Ast String Unit → Criteria → Either TypeError Context
+re ∷ Ast String Unit → Criteria → Either TypeError Context
 re ast criteria = criteria (makeContext inferred.constraints) inferred.typ where
-  inferred :: { typ :: Int, nextType :: Int, constraints :: Infere.Constraints, ast :: Ast String { typ :: Int } }
+  inferred ∷ { typ ∷ Int, nextType ∷ Int, constraints ∷ Infere.Constraints, ast ∷ Ast String { typ ∷ Int } }
   inferred = infere ast
 
-test :: ∀ e . Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Spec (RunnerEffects e) Unit
 test = describe "TypeCheck" do
   describe "identity" do
     it "works" do
@@ -54,11 +54,11 @@ test = describe "TypeCheck" do
   describe "uncallable" do
     let called = re ("x" \ "f" \ ("y" \ "f") ! ("f" ! "x"))
     let identity = re ("x" \ "x")
-    it "works for (x ⇒ x) :: (x → x | uncallable a)" do
+    it "works for (x ⇒ x) ∷ (x → x | uncallable a)" do
       case (identity $ (abs (ref "a") (ref "a")) >>> (onAlias "a" uncallable)) of
         Left err → fail (show err)
         Right dat → pure unit
-    it "throws for (x ⇒ f ⇒ (y ⇒ f) (f x)) :: (a → b → c | uncallable b)"
+    it "throws for (x ⇒ f ⇒ (y ⇒ f) (f x)) ∷ (a → b → c | uncallable b)"
       case (called $ (abs (ref "a") (abs (ref "b") (ref "c"))) >>> (onAlias "b" uncallable)) of
         Left err → err `shouldEqual` (ExpectedToBeUncallable 3)
         Right dat → fail ""

@@ -8,7 +8,7 @@ import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
 
-test :: ∀ e . Evaluate String Unit → Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Evaluate String Unit → Spec (RunnerEffects e) Unit
 test evaluate = describe "curch booleans truth table" do
   let true_ = "x" \ "y" \ "x"
   let false_ = "x" \ "y" \ "y"

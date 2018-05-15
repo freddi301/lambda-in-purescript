@@ -11,7 +11,7 @@ import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
-test :: ∀ e . Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Evaluate" do
   describe "collectFreeReferences" do
     it "works" do

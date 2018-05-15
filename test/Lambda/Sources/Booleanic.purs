@@ -1,6 +1,6 @@
 module Test.Lambda.Sources.Booleanic where
 
-booleanic :: String
+booleanic ∷ String
 booleanic = """
 true a b = a
 false a b = b
@@ -14,7 +14,7 @@ main = doKill
   doKill = or alien human
 """
 
-booleanicMCSE :: String
+booleanicMCSE ∷ String
 booleanicMCSE = """
 true a b = a
 false a b = b
@@ -28,14 +28,14 @@ main = doKill
   doKill = or alien human
 """
 
-combinatorY :: String
+combinatorY ∷ String
 combinatorY = """
 Y f = (side f) (side f)
   side f x = f (x x)
 main = Y
 """
 
-combinatorX :: String
+combinatorX ∷ String
 combinatorX = """
 X f = (left f) right
   left x = x x

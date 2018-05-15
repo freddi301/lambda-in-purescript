@@ -17,7 +17,7 @@ ref name sL sC eL eC = Reference name $ pos sL sC eL eC
 app left right sL sC eL eC = Application left right $ pos sL sC eL eC
 abs head body sL sC eL eC = Abstraction head body $ pos sL sC eL eC
 
-test :: ∀ e . Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Spec (RunnerEffects e) Unit
 test = describe "Parser1" do
   it "works" do
     (parse "x") `shouldEqual` (ref "x" 0 0 0 1)

@@ -16,7 +16,7 @@ import Test.Spec (Spec, describe, it, pending)
 import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Runner (RunnerEffects)
 
-test :: ∀ e . Spec (RunnerEffects e) Unit
+test ∷ ∀ e . Spec (RunnerEffects e) Unit
 test = describe "reify eager" do
   testGlobals
   describe "evaluate" $ BooleanTest.test evaluate
@@ -99,21 +99,21 @@ test = describe "reify eager" do
       let step5 = Pauseable.next step4
       step5 `shouldEqual` (Pauseable.End ("z" \ "z"))
   describe "puaseable symbolic" do
-    let lift = MapReference.map (\name -> (ReifyPauseable.Symbol name 0))
+    let lift = MapReference.map (\name → (ReifyPauseable.Symbol name 0))
     let symbolic = ReifyPauseable.symbolic 0
-    let unlift = MapReference.map (\ref -> case ref of (ReifyPauseable.Symbol name _) -> name)
+    let unlift = MapReference.map (\ref → case ref of (ReifyPauseable.Symbol name _) → name)
     BooleanTest.test (lift >>> symbolic >>> (Pauseable.runIntermediate id) >>> unlift)
     let se = lift >>> symbolic >>> (Pauseable.runIntermediate id) >>> unlift
     let evaluatesTo source result = (se source) `shouldEqual` (globals result)
     pending "booleanTestSuite evaluatesTo"
 
-testGlobals :: ∀ e . Spec (RunnerEffects e) Unit     
+testGlobals ∷ ∀ e . Spec (RunnerEffects e) Unit     
 testGlobals = describe "globals" do
   it "works" do
     (globals (ref "TRUE")) `shouldEqual` ("x" \ "y" \ "x")
     (globals (ref "u")) `shouldEqual` (ref "u")
 
-globals :: Evaluate String Unit
+globals ∷ Evaluate String Unit
 globals ast = case ast of
   Reference "TRUE" _ → "x" \ "y" \ "x"
   Reference "FALSE" _ → "x" \ "y" \ "y"
@@ -122,16 +122,16 @@ globals ast = case ast of
   Reference "OR" _ → "a" \ "b" \ "a" ! "TRUE" ! "b"
   _ → ast
 
-stops :: Ast String Unit → Either (Ast String Unit) (Ast String Unit)
+stops ∷ Ast String Unit → Either (Ast String Unit) (Ast String Unit)
 stops ast = case ast of
   Application (Reference "STOP" _) body _ → Left body
   _ → Right ast
 
-nextInter :: ∀ result . Intermediate result -> Intermediate result
+nextInter ∷ ∀ result . Intermediate result → Intermediate result
 nextInter (End result) = (End result)
 nextInter (Intermediate result task) = task result
 
-booleanTestSuite :: ∀ e . (Ast String Unit -> Ast String Unit -> Aff (RunnerEffects e) Unit) -> Spec (RunnerEffects e) Unit   
+booleanTestSuite ∷ ∀ e . (Ast String Unit → Ast String Unit → Aff (RunnerEffects e) Unit) → Spec (RunnerEffects e) Unit   
 booleanTestSuite evaluatesTo = describe "booleans enhanced" do
   it "respects 'not' truth table" do
     ("NOT" ! "TRUE") `evaluatesTo` (ref "FALSE")
