@@ -1,5 +1,7 @@
 # Lambda in PureScript
 
+See `test` directory
+
 Is a lambda claculus implemented in purescript
 
 It supports 3 evaluation types:
